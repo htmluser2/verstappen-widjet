@@ -18,6 +18,13 @@ shape when resized.
 
 ## Live data and time
 
+- The app has separate **HOME** and **LIVE TIMING** sections. Live Timing uses
+  OpenF1 session, driver, position, lap, interval, tyre-stint, weather,
+  race-control, pit-stop, team-radio, and location feeds. Live sessions refresh
+  every 15 seconds; completed sessions are clearly marked **LAST SESSION**.
+  The latest successful response is cached on-device and marked **CACHED**
+  when the network is unavailable. Unsupported or unavailable data is shown as
+  unavailable rather than being fabricated.
 - Session calendar: [Jolpica](https://jolpi.ca/), refreshed when the app opens
   and periodically in the background.
 - Circuit geometry: [f1-circuits](https://github.com/SergioSediq/f1-circuits),
@@ -106,3 +113,9 @@ Session schedule data comes from [Jolpica](https://jolpi.ca/), a community
 continuation of the Ergast Developer API. This fan
 application is unofficial and is not affiliated with or endorsed by Formula
 One or any racing team.
+
+### Live timing API
+
+Live session data comes from [OpenF1](https://openf1.org/). Availability of
+historical data, team-radio recordings, and circuit GPS records depends on the
+upstream feed.
