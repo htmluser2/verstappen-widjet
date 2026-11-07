@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Verstappen Race Dash</string>
+    <string name="helmet_description">Transparent Max Verstappen helmet artwork</string>
+    <string name="track_map_description">Real circuit track layout</string>
+    <string name="saopaulo_archive_description">Max Verstappen on the podium after winning the 2019 Brazilian Grand Prix</string>
+    <string name="widget_compact_name">Race Dash · Compact</string>
+    <string name="widget_compact_description">Next Grand Prix, live session status and countdown.</string>
+    <string name="widget_wide_name">Race Dash · Wide</string>
+    <string name="widget_wide_description">Next Grand Prix, circuit outline and full weekend timetable.</string>
+    <string name="widget_large_name">Race Dash · Full Dashboard</string>
+    <string name="widget_large_description">Full-size race dashboard with track map, countdown and weekend timetable.</string>
+</resources>

@@ -1,0 +1,1295 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050913">
+  <title>Verstappen Race Dash</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f7fc;
+      --muted: #8a9db7;
+      --dim: #536882;
+      --blue: #47a5ff;
+      --red: #fb4054;
+      --gold: #f2c94c;
+      --panel: rgba(11, 19, 33, .92);
+      --line: rgba(115, 160, 207, .17);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; background: #050913; }
+
+    body {
+      position: relative;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 86% 16%, rgba(12, 72, 131, .27), transparent 33rem),
+        radial-gradient(ellipse at 0% 61%, rgba(128, 24, 45, .16), transparent 31rem),
+        repeating-linear-gradient(130deg, transparent 0 6px, rgba(255,255,255,.012) 7px, transparent 8px 13px),
+        linear-gradient(147deg, #09101c 0%, #050913 47%, #080d18 100%);
+    }
+
+    body::before, body::after {
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      content: "";
+    }
+
+    body::before {
+      inset: 0;
+      opacity: .38;
+      background:
+        repeating-linear-gradient(0deg, transparent 0 38px, rgba(77, 139, 204, .045) 39px, transparent 40px),
+        repeating-linear-gradient(90deg, transparent 0 38px, rgba(77, 139, 204, .035) 39px, transparent 40px);
+      mask-image: linear-gradient(90deg, transparent, black 44%, black);
+    }
+
+    body::after {
+      top: 17%;
+      right: -120px;
+      width: 290px;
+      height: 2px;
+      transform: rotate(-31deg);
+      background: linear-gradient(90deg, transparent, rgba(71,165,255,.75), transparent);
+      box-shadow: 0 0 25px rgba(71,165,255,.65);
+    }
+
+    button { font: inherit; }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 980px);
+      margin: 0 auto;
+      padding: max(16px, env(safe-area-inset-top)) 15px max(20px, env(safe-area-inset-bottom));
+    }
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 47px;
+      padding: 0 1px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .team-lockup { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+    .team-mark {
+      display: grid;
+      width: 32px;
+      height: 30px;
+      place-items: center;
+      color: #06101c;
+      font-size: 15px;
+      font-weight: 1000;
+      font-style: italic;
+      transform: skew(-12deg);
+      background: linear-gradient(145deg, #f8d55d 0 22%, #fb4054 23% 69%, #176fb7 70%);
+      clip-path: polygon(12% 0, 100% 0, 83% 100%, 0 100%);
+      filter: drop-shadow(0 0 10px rgba(251,64,84,.34));
+    }
+
+    .team-copy { min-width: 0; }
+    .team-name { font-size: 9px; font-weight: 900; letter-spacing: .16em; white-space: nowrap; }
+    .team-sub { margin-top: 3px; color: var(--dim); font-size: 7px; font-weight: 800; letter-spacing: .2em; }
+
+    .connection {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border: 1px solid rgba(71,165,255,.18);
+      border-radius: 999px;
+      color: #94a8c1;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .11em;
+      white-space: nowrap;
+      background: rgba(11, 25, 43, .76);
+    }
+
+    .connection-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #42d99a;
+      box-shadow: 0 0 10px rgba(66,217,154,.8);
+    }
+
+    .connection.offline .connection-dot { background: var(--gold); box-shadow: 0 0 10px rgba(242,201,76,.8); }
+
+    .section-nav {
+      display: flex;
+      gap: 7px;
+      padding: 12px 0 2px;
+    }
+
+    .section-nav button {
+      min-height: 34px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      background: rgba(11, 19, 33, .78);
+    }
+
+    .section-nav button[aria-current="page"] {
+      border-color: rgba(242, 201, 76, .55);
+      color: #080b11;
+      background: var(--gold);
+    }
+
+    .live-shell {
+      --live-bg: #070b12;
+      --live-panel: #101927;
+      --live-panel-2: #0c1420;
+      --live-line: rgba(132, 160, 194, .19);
+      --live-gold: #f2c94c;
+      margin-top: 12px;
+      color: #eff4fb;
+    }
+
+    .live-session-card, .live-content-panel {
+      border: 1px solid var(--live-line);
+      border-radius: 10px;
+      background: linear-gradient(145deg, #121d2b, #0b111b 70%);
+      box-shadow: 0 12px 32px rgba(0,0,0,.2);
+    }
+
+    .live-session-card { padding: 15px; }
+    .live-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .live-kicker, .live-small-label { color:#91a2b9; font-size:8px; font-weight:900; letter-spacing:.15em; }
+    .live-session-card h1 { margin:7px 0 4px; font-size:clamp(21px,6vw,32px); line-height:1.04; letter-spacing:-.03em; }
+    .live-subtitle { color:#aab8ca; font-size:11px; }
+    .live-state {
+      flex:none; padding:6px 8px; border:1px solid rgba(242,201,76,.45); border-radius:4px;
+      color:var(--live-gold); font-size:8px; font-weight:1000; letter-spacing:.12em;
+    }
+    .live-state[data-live="true"] { border-color:rgba(255,66,79,.6); color:#ff6875; }
+    .live-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:15px; }
+    .live-metric { min-width:0; padding:9px; border:1px solid var(--live-line); border-radius:6px; background:#0a111b; }
+    .live-metric strong { display:block; margin-top:5px; overflow:hidden; color:#f6f8fc; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+    .live-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin:11px 0; }
+    .live-tabs button {
+      min-width:0; min-height:38px; padding:4px 2px; border:0; border-bottom:2px solid transparent;
+      color:#8fa1b8; font-size:8px; font-weight:1000; letter-spacing:.08em; background:transparent;
+    }
+    .live-tabs button[aria-selected="true"] { border-bottom-color:var(--live-gold); color:#fff; }
+    .live-content-panel { min-height:280px; overflow:hidden; background:var(--live-panel-2); }
+    .live-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 12px; border-bottom:1px solid var(--live-line); }
+    .live-panel-heading strong { font-size:10px; letter-spacing:.12em; }
+    .live-panel-heading span { color:#9aabc0; font-size:8px; }
+    .live-table-scroll { overflow-x:auto; }
+    .live-table { width:100%; min-width:590px; border-collapse:collapse; font-size:10px; }
+    .live-table th { padding:10px 7px; color:#8799b0; font-size:8px; letter-spacing:.1em; text-align:left; background:#111c2a; }
+    .live-table td { height:43px; padding:5px 7px; border-top:1px solid rgba(132,160,194,.11); white-space:nowrap; }
+    .live-table tr.leader { background:linear-gradient(90deg,rgba(242,201,76,.12),transparent 80%); }
+    .live-position { width:26px; color:var(--live-gold); font-weight:1000; }
+    .live-driver { display:flex; align-items:center; gap:7px; font-weight:1000; }
+    .team-stripe { width:3px; height:23px; border-radius:3px; background:var(--team-color,#8292a8); }
+    .live-team { max-width:110px; overflow:hidden; color:#aab8ca; text-overflow:ellipsis; }
+    .live-gap { color:#e4ebf4; font-variant-numeric:tabular-nums; }
+    .tyre-chip { display:inline-grid; width:24px; height:24px; place-items:center; border:1px solid currentColor; border-radius:50%; font-size:9px; font-weight:1000; }
+    .tyre-soft { color:#ff5564; } .tyre-medium { color:#f2c94c; } .tyre-hard { color:#e7edf5; }
+    .tyre-intermediate { color:#48d6a0; } .tyre-wet { color:#47a5ff; } .tyre-unknown { color:#8595a8; }
+    .live-empty { padding:24px 15px; color:#aab8ca; font-size:11px; line-height:1.6; text-align:center; }
+    .live-event { display:grid; grid-template-columns:48px 1fr; gap:10px; padding:11px 12px; border-bottom:1px solid var(--live-line); }
+    .live-event time { color:var(--live-gold); font-size:9px; font-variant-numeric:tabular-nums; }
+    .live-event div { color:#e4ebf4; font-size:10px; line-height:1.45; }
+    .live-event small { display:block; margin-top:3px; color:#91a2b9; font-size:8px; }
+    .live-map-wrap { padding:12px; }
+    .live-map { display:block; width:100%; height:230px; overflow:visible; touch-action:pan-y; }
+    .live-map path.track-glow { fill:none; stroke:#2b8be0; stroke-width:11; opacity:.2; }
+    .live-map path.track-line { fill:none; stroke:#a8d7ff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+    .live-map circle.car-dot { stroke:#fff; stroke-width:1.5; }
+    .map-legend { display:flex; flex-wrap:wrap; gap:7px 12px; margin-top:11px; }
+    .map-legend span { display:flex; align-items:center; gap:5px; color:#c1ccda; font-size:8px; }
+    .map-legend i { width:7px; height:7px; border-radius:50%; background:var(--team-color); }
+    .radio-card { padding:12px; border-bottom:1px solid var(--live-line); }
+    .radio-card-top { display:flex; justify-content:space-between; gap:8px; color:#f1f5fa; font-size:10px; font-weight:900; }
+    .radio-card time { color:#9aabc0; font-size:9px; font-weight:500; }
+    .radio-card audio { width:100%; height:34px; margin-top:9px; }
+    .live-cache-note { margin:8px 2px 0; color:#8fa1b8; font-size:8px; text-align:right; }
+    .live-next-link { display:block; margin-top:10px; padding:11px; border:1px solid var(--live-line); border-radius:7px; color:#f2c94c; font-size:10px; font-weight:900; text-align:center; background:#0c1420; }
+    #liveScreen[hidden], #homeScreen[hidden] { display:none !important; }
+
+    @media (min-width:650px) {
+      .live-shell { max-width:980px; margin-right:auto; margin-left:auto; }
+      .live-session-card { padding:21px; }
+      .live-map { height:300px; }
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(128px, .76fr);
+      min-height: 255px;
+      margin-top: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(102, 150, 203, .22);
+      border-radius: 19px;
+      background:
+        linear-gradient(108deg, rgba(15,26,43,.98) 0%, rgba(9,17,30,.97) 50%, rgba(7,14,26,.87) 100%),
+        var(--panel);
+      box-shadow: 0 18px 48px rgba(0,0,0,.32), inset 0 1px rgba(255,255,255,.04);
+    }
+
+    .hero-photo {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 38%;
+      filter: brightness(.72) saturate(.95);
+    }
+
+    .hero-photo-shade {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(7,13,23,.95) 0%, rgba(7,13,23,.72) 39%, rgba(7,13,23,.04) 82%),
+        linear-gradient(0deg, rgba(5,9,19,.5), transparent 43%);
+    }
+
+    .archive-label {
+      position: absolute;
+      z-index: 4;
+      top: 12px;
+      right: 12px;
+      padding: 6px 8px;
+      border: 1px solid rgba(242,201,76,.38);
+      border-radius: 4px;
+      color: #f5d774;
+      font-size: 7px;
+      font-weight: 900;
+      letter-spacing: .11em;
+      background: rgba(8,13,23,.78);
+      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    }
+
+    .hero.has-archive-photo .hero-photo {
+      animation: photo-arrive .35s ease-out both;
+    }
+
+    .hero.has-archive-photo .helmet-wrap {
+      visibility: hidden;
+      opacity: 0;
+      transform: translateX(12px);
+    }
+
+    @keyframes photo-arrive {
+      from { opacity: .4; }
+      to { opacity: 1; }
+    }
+
+    .hero::before {
+      position: absolute;
+      top: -50px;
+      right: 21%;
+      width: 2px;
+      height: 365px;
+      content: "";
+      transform: rotate(38deg);
+      background: linear-gradient(transparent, rgba(251,64,84,.72), transparent);
+      box-shadow: 0 0 17px rgba(251,64,84,.26);
+    }
+
+    .hero::after {
+      position: absolute;
+      right: 0;
+      bottom: 31px;
+      width: 60%;
+      height: 1px;
+      content: "";
+      background: linear-gradient(90deg, transparent, rgba(71,165,255,.7), transparent);
+      box-shadow: 0 0 12px rgba(71,165,255,.45);
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 3;
+      align-self: center;
+      padding: 24px 0 25px 20px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--gold);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before { width: 16px; height: 2px; content: ""; background: var(--red); box-shadow: 0 0 9px var(--red); }
+
+    h1 {
+      max-width: 265px;
+      margin: 13px 0 0;
+      font-size: clamp(24px, 7vw, 37px);
+      font-weight: 950;
+      letter-spacing: -.055em;
+      line-height: .96;
+      text-transform: uppercase;
+      text-wrap: balance;
+    }
+
+    .hero-country {
+      margin-top: 10px;
+      color: #a7b9d1;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .hero-circuit {
+      margin-top: 5px;
+      color: #697f9a;
+      font-size: 9px;
+      line-height: 1.4;
+    }
+
+    .hero-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 17px;
+      padding: 7px 10px;
+      border: 1px solid rgba(136,167,205,.18);
+      border-radius: 4px;
+      color: #d7e3f2;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      background: rgba(14,26,43,.78);
+    }
+
+    .hero-date::before { width: 5px; height: 5px; content: ""; background: var(--red); box-shadow: 0 0 9px var(--red); }
+
+    .driver-number {
+      display: block;
+      margin-top: 13px;
+      color: rgba(116,155,201,.09);
+      font-size: 49px;
+      font-weight: 1000;
+      font-style: italic;
+      letter-spacing: -.08em;
+      line-height: .8;
+    }
+
+    .helmet-wrap {
+      position: absolute;
+      z-index: 2;
+      top: 9px;
+      right: -8px;
+      display: grid;
+      width: min(57%, 248px);
+      height: 82%;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .helmet-wrap::after {
+      position: absolute;
+      inset: 17% 8% 8%;
+      z-index: -1;
+      content: "";
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(27,114,194,.35), rgba(20,54,94,.12) 48%, transparent 72%);
+      filter: blur(15px);
+    }
+
+    .helmet {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,.52)) drop-shadow(0 0 12px rgba(53,139,220,.2));
+      transform: rotate(4deg);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .hero-car {
+      position: absolute;
+      z-index: 2;
+      right: 5px;
+      bottom: 14px;
+      width: min(55%, 260px);
+      height: 94px;
+      object-fit: cover;
+      object-position: center 57%;
+      opacity: .86;
+      filter: brightness(.76) saturate(1.04) drop-shadow(0 8px 13px rgba(0,0,0,.45));
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 84%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 12%, #000 84%, transparent);
+    }
+
+    .hero-car-credit {
+      position: absolute;
+      z-index: 4;
+      right: 12px;
+      bottom: 5px;
+      color: #90a5bf;
+      font-size: 6px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-shadow: 0 1px 5px #050913;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background:
+        linear-gradient(140deg, rgba(15,26,43,.96), rgba(7,14,25,.97)),
+        var(--panel);
+      box-shadow: 0 12px 30px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.025);
+    }
+
+    .panel::before {
+      position: absolute;
+      top: 0;
+      left: 18px;
+      width: 65px;
+      height: 2px;
+      content: "";
+      background: linear-gradient(90deg, var(--blue), transparent);
+      box-shadow: 0 0 12px rgba(71,165,255,.42);
+    }
+
+    .session-panel { padding: 16px; }
+
+    .panel-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: #8fa4bf;
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      padding: 0 8px;
+      border: 1px solid rgba(71,165,255,.19);
+      border-radius: 999px;
+      color: var(--blue);
+      font-size: 7px;
+      letter-spacing: .12em;
+      background: rgba(19,54,86,.32);
+    }
+
+    .live-badge[data-state="LIVE"] { color: #ff7180; border-color: rgba(251,64,84,.32); background: rgba(103,21,35,.28); }
+    .live-badge[data-state="FINISHED"] { color: #a9b5c5; border-color: rgba(169,181,197,.2); }
+
+    .live-badge::before {
+      width: 5px;
+      height: 5px;
+      content: "";
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 9px currentColor;
+    }
+
+    .timer-caption {
+      margin-top: 16px;
+      color: var(--dim);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .timer {
+      margin-top: 4px;
+      color: #f7f9fd;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      font-size: clamp(30px, 9vw, 46px);
+      font-weight: 900;
+      letter-spacing: -.06em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 22px rgba(82,149,220,.16);
+    }
+
+    .timer.live { color: #ff6878; text-shadow: 0 0 18px rgba(251,64,84,.28); }
+
+    .timer-sub {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 9px;
+      color: #798da7;
+      font-size: 9px;
+    }
+
+    .timer-sub strong { color: #bdcce0; font-weight: 800; }
+
+    .sector-line {
+      position: relative;
+      height: 3px;
+      margin-top: 15px;
+      overflow: hidden;
+      background: linear-gradient(90deg, var(--red) 0 18%, #d7ae3c 18% 21%, var(--blue) 21% 73%, #283b54 73%);
+      box-shadow: 0 0 10px rgba(71,165,255,.2);
+      clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%);
+    }
+
+    .schedule-panel { padding: 16px 14px 12px; }
+    .schedule-list { margin-top: 11px; }
+
+    .session-row {
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-height: 35px;
+      border-top: 1px solid rgba(120,151,186,.1);
+    }
+
+    .session-code {
+      color: #f0c64c;
+      font-size: 8px;
+      font-weight: 950;
+      letter-spacing: .08em;
+    }
+
+    .session-name {
+      overflow: hidden;
+      color: #bcc9da;
+      font-size: 9px;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .session-time {
+      color: #8da1bc;
+      font-size: 9px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .session-row.is-next .session-name, .session-row.is-next .session-time { color: #fff; }
+    .session-row.is-next .session-code { color: #ff6372; }
+
+    .map-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 92px;
+      align-items: center;
+      min-height: 128px;
+      padding: 15px;
+    }
+
+    .track-map {
+      display: grid;
+      min-width: 0;
+      height: 96px;
+      place-items: center;
+    }
+
+    .track-map svg { width: 100%; height: 100%; overflow: visible; }
+
+    .track-meta { padding-left: 9px; }
+    .track-label { color: var(--dim); font-size: 7px; font-weight: 900; letter-spacing: .15em; }
+    .track-name { margin-top: 7px; color: #dbe5f1; font-size: 10px; font-weight: 800; line-height: 1.25; }
+    .track-length { margin-top: 5px; color: #7f95b0; font-size: 8px; }
+    .map-empty { color: #71859f; font-size: 8px; line-height: 1.5; text-align: center; }
+
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px 4px 2px;
+      border-top: 1px solid rgba(120,151,186,.16);
+    }
+
+    .driver-lockup { display: flex; align-items: center; gap: 9px; }
+    .f1-mark {
+      color: var(--red);
+      font-size: 22px;
+      font-weight: 1000;
+      font-style: italic;
+      letter-spacing: -.13em;
+      transform: skew(-12deg);
+      text-shadow: 0 0 12px rgba(251,64,84,.3);
+    }
+
+    .driver-name { font-size: 9px; font-weight: 950; letter-spacing: .13em; }
+    .driver-meta { margin-top: 3px; color: var(--dim); font-size: 7px; font-weight: 800; letter-spacing: .12em; }
+    .telemetry { color: #536a85; font-size: 7px; font-weight: 800; letter-spacing: .08em; text-align: right; }
+    .telemetry span { color: #92a6c0; }
+
+    .source-line {
+      margin: 9px 3px 0;
+      color: #4d627b;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: .045em;
+      line-height: 1.5;
+    }
+
+    .source-line a { color: #7189a6; text-decoration: none; }
+    .source-line a:focus-visible { outline: 1px solid var(--blue); }
+
+    .error-line {
+      display: none;
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-left: 2px solid var(--gold);
+      color: #e4c971;
+      font-size: 9px;
+      line-height: 1.4;
+      background: rgba(85,67,21,.14);
+    }
+    .error-line.visible { display: block; }
+
+    @media (min-width: 600px) {
+      .shell { padding: 24px 24px 28px; }
+      .hero { min-height: 320px; border-radius: 22px; }
+      .hero-copy { padding-left: 34px; }
+      .helmet-wrap { right: 22px; width: 42%; max-width: 340px; }
+      .hero-car { right: 18px; bottom: 17px; width: min(47%, 310px); height: 132px; }
+      .hero-car-credit { right: 24px; bottom: 7px; }
+      .main-grid { grid-template-columns: .9fr 1.1fr; gap: 14px; margin-top: 14px; }
+      .map-panel { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 145px; min-height: 156px; }
+      .track-map { height: 125px; }
+      .session-panel, .schedule-panel { padding: 19px; }
+      .session-row { min-height: 39px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="team-lockup">
+        <div class="team-mark" aria-hidden="true">R</div>
+        <div class="team-copy">
+          <div class="team-name">ORACLE RED BULL RACING</div>
+          <div class="team-sub">RACE CONTROL · MAX VERSTAPPEN</div>
+        </div>
+      </div>
+      <div id="connection" class="connection" role="status" aria-live="polite">
+        <span class="connection-dot" aria-hidden="true"></span>
+        <span id="connectionText">SYNCING</span>
+      </div>
+    </header>
+
+    <nav class="section-nav" aria-label="Main sections">
+      <button type="button" data-screen="homeScreen" aria-current="page">HOME</button>
+      <button type="button" data-screen="liveScreen" aria-current="false">LIVE TIMING</button>
+    </nav>
+
+    <section id="homeScreen">
+    <section class="hero" aria-labelledby="raceTitle">
+      <img id="heroPhoto" class="hero-photo" alt="" hidden>
+      <div id="heroPhotoShade" class="hero-photo-shade" hidden></div>
+      <div id="archiveLabel" class="archive-label" hidden>ARCHIVE · SÃO PAULO WIN · 2019</div>
+      <div class="hero-copy">
+        <div class="eyebrow">NEXT GRAND PRIX</div>
+        <h1 id="raceTitle">Race calendar</h1>
+        <div id="raceCountry" class="hero-country">Live schedule · no invented dates</div>
+        <div id="raceCircuit" class="hero-circuit">Circuit data loads from the live calendar</div>
+        <div id="raceDate" class="hero-date">DATE PENDING OFFICIAL FEED</div>
+        <span class="driver-number" aria-hidden="true">03</span>
+      </div>
+      <div class="helmet-wrap">
+        <img class="helmet" src="helmet.png" alt="Transparent Max Verstappen helmet artwork">
+      </div>
+      <img
+        class="hero-car"
+        src="red-bull-rb19-on-track.jpg"
+        alt="Red Bull Racing RB19 Formula 1 car on track at the 2023 Austrian Grand Prix">
+      <div class="hero-car-credit">RB19 · AUSTRIA 2023</div>
+    </section>
+
+    <div class="main-grid">
+      <section class="panel session-panel" aria-labelledby="nextSessionHeading">
+        <div class="panel-heading">
+          <span id="nextSessionHeading">SESSION CONTROL</span>
+          <span id="sessionStatus" class="live-badge" data-state="UPCOMING">UPCOMING</span>
+        </div>
+        <div id="timerCaption" class="timer-caption">COUNTDOWN TO FP1</div>
+        <div id="countdown" class="timer" aria-live="off">--:--:--</div>
+        <div class="timer-sub">
+          <strong id="nextSessionName">WAITING FOR SCHEDULE</strong>
+          <span id="nextSessionTime">KYIV · --:--</span>
+        </div>
+        <div class="sector-line" aria-hidden="true"></div>
+      </section>
+
+      <section class="panel schedule-panel" aria-labelledby="scheduleHeading">
+        <div class="panel-heading">
+          <span id="scheduleHeading">WEEKEND RUN PLAN</span>
+          <span id="weekendRound" class="live-badge">LIVE FEED</span>
+        </div>
+        <div id="scheduleList" class="schedule-list" aria-live="polite">
+          <div class="session-row">
+            <span class="session-code">FP1</span>
+            <span class="session-name">Loading official sessions</span>
+            <span class="session-time">--:--</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel map-panel" aria-label="Circuit map">
+        <div id="trackMap" class="track-map">
+          <div class="map-empty">REAL CIRCUIT MAP<br>WAITING FOR DATA</div>
+        </div>
+        <div class="track-meta">
+          <div class="track-label">CIRCUIT TRACE</div>
+          <div id="trackName" class="track-name">Official geometry</div>
+          <div id="trackLength" class="track-length">SOURCE · OPEN DATA</div>
+        </div>
+      </section>
+    </div>
+
+    <div id="errorLine" class="error-line" role="status"></div>
+
+    <footer class="bottom-bar">
+      <div class="driver-lockup">
+        <div class="f1-mark" aria-label="Formula racing">F1</div>
+        <div>
+          <div class="driver-name">VERSTAPPEN <span style="color:#F2C94C">#3</span></div>
+          <div class="driver-meta">PRECISION · PACE · PERFORMANCE</div>
+        </div>
+      </div>
+      <div class="telemetry">DATA <span id="updatedAt">--</span><br>TIMEZONE <span>EUROPE/KYIV</span></div>
+    </footer>
+    <div class="source-line">
+      Schedule: <a href="https://jolpi.ca/" rel="noreferrer">Jolpica</a> · Track geometry:
+      <a href="https://github.com/SergioSediq/f1-circuits" rel="noreferrer">f1-circuits</a> ·
+      Helmet artwork attribution and license are in THIRD_PARTY_NOTICES.md.
+    </div>
+    </section>
+
+    <section id="liveScreen" class="live-shell" hidden aria-label="Live timing">
+      <div class="live-session-card">
+        <div class="live-title-row">
+          <div>
+            <div class="live-kicker">OPENF1 · SESSION CONTROL</div>
+            <h1 id="liveGrandPrix">Loading session data</h1>
+            <div id="liveCircuit" class="live-subtitle">Connecting to the official timing feed</div>
+          </div>
+          <span id="liveStatus" class="live-state">SYNCING</span>
+        </div>
+        <div class="live-metrics">
+          <div class="live-metric"><span class="live-small-label">SESSION</span><strong id="liveSessionType">—</strong></div>
+          <div class="live-metric"><span class="live-small-label">LAP</span><strong id="liveLap">—</strong></div>
+          <div class="live-metric"><span class="live-small-label">TRACK / AIR</span><strong id="liveWeather">—</strong></div>
+        </div>
+      </div>
+      <nav class="live-tabs" aria-label="Live timing views">
+        <button type="button" data-live-tab="leaderboard" aria-selected="true">LEADERBOARD</button>
+        <button type="button" data-live-tab="events" aria-selected="false">EVENTS</button>
+        <button type="button" data-live-tab="radio" aria-selected="false">TEAM RADIO</button>
+        <button type="button" data-live-tab="map" aria-selected="false">TRACK MAP</button>
+      </nav>
+      <div id="livePanel" class="live-content-panel" aria-live="polite">
+        <div class="live-empty">Loading OpenF1 session data…</div>
+      </div>
+      <div id="liveCacheNote" class="live-cache-note"></div>
+      <a id="liveNextGp" class="live-next-link" href="#" hidden>VIEW NEXT GRAND PRIX IN HOME →</a>
+    </section>
+  </main>
+
+  <script src="live-timing.js"></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const KYIV = "Europe/Kyiv";
+      const trackFiles = {
+        2: "gb-1948", 4: "hu-1986", 7: "be-1925", 9: "us-2012",
+        10: "au-1953", 12: "my-1999", 14: "br-1940", 15: "es-1991",
+        19: "at-1969", 22: "mc-1929", 23: "ca-1978", 39: "it-1922",
+        46: "jp-1962", 49: "cn-2004", 55: "nl-1948", 61: "sg-2008",
+        63: "bh-2002", 65: "mx-1962", 70: "ae-2009", 144: "az-2016",
+        149: "sa-2021", 150: "qa-2004", 151: "us-2022", 152: "us-2023",
+        153: "es-2026"
+      };
+      const historicalVictoryPhotos = {
+        14: {
+          src: "sao-paulo-2019-verstappen-victory.jpg",
+          alt: "Max Verstappen celebrating his 2019 Brazilian Grand Prix victory on the São Paulo podium",
+          caption: "ARCHIVE · SÃO PAULO WIN · 2019"
+        }
+      };
+      const timeFormatter = new Intl.DateTimeFormat("uk-UA", {
+        timeZone: KYIV, hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      });
+      const dayFormatter = new Intl.DateTimeFormat("uk-UA", {
+        timeZone: KYIV, day: "2-digit", month: "short"
+      });
+      const fullDateFormatter = new Intl.DateTimeFormat("uk-UA", {
+        timeZone: KYIV, day: "2-digit", month: "long", year: "numeric"
+      });
+      const $ = (id) => document.getElementById(id);
+      let activeSession = null;
+      let timerHandle = 0;
+      let refreshHandle = 0;
+
+      function sessionsFrom(raw) {
+        const data = typeof raw === "string" ? JSON.parse(raw) : raw;
+        if (!Array.isArray(data)) throw new Error("Schedule data is not a list.");
+        return data.filter((session) =>
+          session && !session.is_cancelled && session.date_start && session.date_end
+        ).map((session) => ({
+          ...session,
+          startMs: Date.parse(session.date_start),
+          endMs: Date.parse(session.date_end)
+        })).filter((session) =>
+          Number.isFinite(session.startMs) && Number.isFinite(session.endMs)
+        ).sort((a, b) => a.startMs - b.startMs);
+      }
+
+      const jolpicaCircuitKeys = {
+        albert_park: 10, bahrain: 63, shanghai: 49, suzuka: 46, jeddah: 149,
+        miami: 151, monaco: 22, catalunya: 15, villeneuve: 23, red_bull_ring: 19,
+        silverstone: 2, spa: 7, hungaroring: 4, zandvoort: 55, monza: 39,
+        baku: 144, marina_bay: 61, americas: 9, rodriguez: 65, interlagos: 14,
+        vegas: 152, losail: 150, yas_marina: 70, madrid: 153
+      };
+      const jolpicaSessions = [
+        ["Practice 1", ["FirstPractice", "firstPractice"], 60],
+        ["Practice 2", ["SecondPractice", "secondPractice"], 60],
+        ["Practice 3", ["ThirdPractice", "thirdPractice"], 60],
+        ["Sprint Qualifying", ["SprintQualifying", "sprintQualifying"], 60],
+        ["Sprint", ["Sprint", "sprint"], 60],
+        ["Qualifying", ["Qualifying", "qualifying"], 60],
+        ["Race", null, 120]
+      ];
+
+      function sessionsFromJolpica(data) {
+        const races = data?.MRData?.RaceTable?.Races;
+        if (!Array.isArray(races)) throw new Error("Jolpica response has no race schedule.");
+        const sessions = [];
+        races.forEach((race) => {
+          const round = Number(race.round);
+          if (!Number.isInteger(round) || round <= 0) return;
+          const meetingKey = Number(race.season) * 100 + round;
+          jolpicaSessions.forEach(([name, keys, durationMinutes], sessionIndex) => {
+            const details = keys
+              ? keys.map((key) => race[key]).find((value) => value && typeof value === "object")
+              : race;
+            if (!details?.date || !details?.time) return;
+            const start = Date.parse(`${details.date}T${details.time}`);
+            if (!Number.isFinite(start)) return;
+            const circuit = race.Circuit || {};
+            const location = circuit.Location || {};
+            sessions.push({
+              session_key: meetingKey * 10 + sessionIndex,
+              meeting_key: meetingKey,
+              circuit_key: jolpicaCircuitKeys[circuit.circuitId] || 0,
+              session_name: name,
+              session_type: name.startsWith("Practice") ? "Practice" : name,
+              country_name: location.country || "Country unavailable",
+              location: location.locality || race.raceName?.replace(/ Grand Prix$/, "") || "",
+              circuit_short_name: circuit.circuitName || "Circuit unavailable",
+              date_start: new Date(start).toISOString(),
+              date_end: new Date(start + durationMinutes * 60_000).toISOString()
+            });
+          });
+        });
+        return sessions;
+      }
+
+      function codeFor(name) {
+        const codes = {
+          "Practice 1": "FP1", "Practice 2": "FP2", "Practice 3": "FP3",
+          "Sprint Qualifying": "SPRINT QUALI", "Sprint Shootout": "SPRINT SHOOTOUT",
+          "Sprint": "SPRINT", "Qualifying": "QUALI", "Race": "RACE"
+        };
+        return codes[name] || String(name || "SESSION").toUpperCase();
+      }
+
+      function nextRace(sessions, now) {
+        const races = sessions.filter((session) => session.session_name === "Race");
+        return races.find((race) => race.endMs > now) || null;
+      }
+
+      function stateOf(session, now) {
+        if (now < session.startMs) return "UPCOMING";
+        if (now < session.endMs) return "LIVE";
+        return "FINISHED";
+      }
+
+      function kyivTime(timestamp) {
+        return timeFormatter.format(new Date(timestamp));
+      }
+
+      function showError(message) {
+        const errorLine = $("errorLine");
+        errorLine.textContent = message;
+        errorLine.classList.add("visible");
+      }
+
+      function clearError() {
+        $("errorLine").textContent = "";
+        $("errorLine").classList.remove("visible");
+      }
+
+      function renderCountdown() {
+        if (!activeSession) return;
+        const now = Date.now();
+        const state = stateOf(activeSession, now);
+        const status = $("sessionStatus");
+        status.textContent = state;
+        status.dataset.state = state;
+        $("nextSessionName").textContent = codeFor(activeSession.session_name);
+        $("nextSessionTime").textContent = `KYIV · ${kyivTime(activeSession.startMs)}`;
+        const timer = $("countdown");
+        timer.classList.toggle("live", state === "LIVE");
+        if (state === "LIVE") {
+          $("timerCaption").textContent = "SESSION IN PROGRESS";
+          timer.textContent = `LIVE · ${kyivTime(activeSession.endMs)}`;
+          return;
+        }
+        if (state === "FINISHED") {
+          $("timerCaption").textContent = "SESSION STATUS";
+          timer.textContent = "FINISHED";
+          return;
+        }
+        $("timerCaption").textContent = `COUNTDOWN TO ${codeFor(activeSession.session_name)}`;
+        let remaining = Math.max(0, Math.floor((activeSession.startMs - now) / 1000));
+        const days = Math.floor(remaining / 86400);
+        remaining %= 86400;
+        const hours = Math.floor(remaining / 3600);
+        remaining %= 3600;
+        const minutes = Math.floor(remaining / 60);
+        const seconds = remaining % 60;
+        timer.textContent = days > 0
+          ? `${days}d ${String(hours).padStart(2, "0")}h ${String(minutes).padStart(2, "0")}m`
+          : `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function createTrackSvg(geoJson) {
+        const feature = geoJson.features && geoJson.features[0];
+        const coordinates = feature && feature.geometry && feature.geometry.coordinates;
+        if (!Array.isArray(coordinates) || coordinates.length < 3) {
+          throw new Error("Circuit geometry is missing.");
+        }
+        const points = coordinates.filter((point) =>
+          Array.isArray(point) && Number.isFinite(Number(point[0])) && Number.isFinite(Number(point[1]))
+        );
+        if (points.length < 3) throw new Error("Circuit geometry is incomplete.");
+        const xs = points.map((point) => Number(point[0]));
+        const ys = points.map((point) => Number(point[1]));
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
+        const width = 300, height = 170, padding = 18;
+        const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY);
+        const drawnWidth = spanX * scale, drawnHeight = spanY * scale;
+        const offsetX = (width - drawnWidth) / 2, offsetY = (height - drawnHeight) / 2;
+        const mapped = points.map((point) => [
+          offsetX + (Number(point[0]) - minX) * scale,
+          height - offsetY - (Number(point[1]) - minY) * scale
+        ]);
+        const pathData = mapped.map((point, index) =>
+          `${index === 0 ? "M" : "L"}${point[0].toFixed(2)} ${point[1].toFixed(2)}`
+        ).join(" ") + " Z";
+        const namespace = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(namespace, "svg");
+        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        svg.setAttribute("role", "img");
+        svg.setAttribute("aria-label", "Real circuit layout");
+        const defs = document.createElementNS(namespace, "defs");
+        const filter = document.createElementNS(namespace, "filter");
+        filter.setAttribute("id", "trackGlow");
+        filter.setAttribute("x", "-50%"); filter.setAttribute("y", "-50%");
+        filter.setAttribute("width", "200%"); filter.setAttribute("height", "200%");
+        const blur = document.createElementNS(namespace, "feGaussianBlur");
+        blur.setAttribute("stdDeviation", "3.2");
+        blur.setAttribute("result", "blur");
+        filter.appendChild(blur);
+        defs.appendChild(filter);
+        svg.appendChild(defs);
+        const glow = document.createElementNS(namespace, "path");
+        glow.setAttribute("d", pathData);
+        glow.setAttribute("fill", "none");
+        glow.setAttribute("stroke", "#2c8ce4");
+        glow.setAttribute("stroke-width", "9");
+        glow.setAttribute("stroke-linejoin", "round");
+        glow.setAttribute("stroke-linecap", "round");
+        glow.setAttribute("filter", "url(#trackGlow)");
+        svg.appendChild(glow);
+        const line = document.createElementNS(namespace, "path");
+        line.setAttribute("d", pathData);
+        line.setAttribute("fill", "none");
+        line.setAttribute("stroke", "#91ceff");
+        line.setAttribute("stroke-width", "3");
+        line.setAttribute("stroke-linejoin", "round");
+        line.setAttribute("stroke-linecap", "round");
+        svg.appendChild(line);
+        const marker = document.createElementNS(namespace, "circle");
+        marker.setAttribute("cx", mapped[0][0].toFixed(2));
+        marker.setAttribute("cy", mapped[0][1].toFixed(2));
+        marker.setAttribute("r", "5");
+        marker.setAttribute("fill", "#fb4054");
+        marker.setAttribute("stroke", "#fff");
+        marker.setAttribute("stroke-width", "1.5");
+        svg.appendChild(marker);
+        return { svg, feature };
+      }
+
+      async function renderTrack(race) {
+        const trackMap = $("trackMap");
+        const trackName = race.circuit_short_name || "Circuit";
+        $("trackName").textContent = trackName;
+        $("trackLength").textContent = "CIRCUIT GEOMETRY · OPEN DATA";
+        try {
+          let raw = window.AndroidF1?.getTrackGeoJson(Number(race.circuit_key)) || "";
+          if (!raw) {
+            const file = trackFiles[Number(race.circuit_key)];
+            if (!file) throw new Error("No mapped track geometry for this circuit.");
+            const response = await fetch(
+              `https://raw.githubusercontent.com/SergioSediq/f1-circuits/main/circuits/${file}.geojson`,
+              { cache: "force-cache" }
+            );
+            if (!response.ok) throw new Error(`Track data returned HTTP ${response.status}.`);
+            raw = await response.text();
+          }
+          const result = createTrackSvg(JSON.parse(raw));
+          trackMap.replaceChildren(result.svg);
+          const length = result.feature.properties && result.feature.properties.length;
+          if (Number.isFinite(Number(length))) {
+            $("trackLength").textContent = `${(Number(length) / 1000).toFixed(3)} KM · REAL LAYOUT`;
+          }
+        } catch (error) {
+          trackMap.replaceChildren();
+          const empty = document.createElement("div");
+          empty.className = "map-empty";
+          empty.textContent = "TRACK MAP NOT AVAILABLE";
+          trackMap.appendChild(empty);
+          $("trackLength").textContent = "NO GEOMETRY IN SOURCE";
+          showError(error instanceof Error ? error.message : "Could not load track geometry.");
+        }
+      }
+
+      function render(sessions, updatedAt, source) {
+        const now = Date.now();
+        const race = nextRace(sessions, now);
+        if (!race) {
+          activeSession = null;
+          if (timerHandle) clearInterval(timerHandle);
+          $("raceTitle").textContent = "NEXT GP PENDING";
+          setHistoricalVictoryPhoto(null);
+          $("raceCountry").textContent = "Next season date not published";
+          $("raceCircuit").textContent = "No date has been assumed";
+          $("raceDate").textContent = "WAITING FOR THE OFFICIAL CALENDAR";
+          $("weekendRound").textContent = "SEASON BREAK";
+          $("sessionStatus").textContent = "FINISHED";
+          $("sessionStatus").dataset.state = "FINISHED";
+          $("timerCaption").textContent = "SEASON STATUS";
+          $("countdown").textContent = "—";
+          $("countdown").classList.remove("live");
+          $("nextSessionName").textContent = "NEXT RACE NOT PUBLISHED";
+          $("nextSessionTime").textContent = "NO UPCOMING START";
+          $("scheduleList").replaceChildren();
+          const row = document.createElement("div");
+          row.className = "session-row";
+          const message = document.createElement("span");
+          message.className = "session-name";
+          message.textContent = "No future session dates are available.";
+          message.style.gridColumn = "1 / -1";
+          row.appendChild(message);
+          $("scheduleList").appendChild(row);
+          $("trackMap").replaceChildren();
+          const mapMessage = document.createElement("div");
+          mapMessage.className = "map-empty";
+          mapMessage.textContent = "NEXT CIRCUIT NOT ANNOUNCED";
+          $("trackMap").appendChild(mapMessage);
+          $("trackName").textContent = "Awaiting calendar";
+          $("trackLength").textContent = "NO GEOMETRY IN SOURCE";
+          $("connection").classList.toggle("offline", source === "cache");
+          $("connectionText").textContent = source === "cache" ? "CACHED DATA" : "SCHEDULE DATA";
+          $("updatedAt").textContent = updatedAt
+            ? new Intl.DateTimeFormat("uk-UA", {
+                timeZone: KYIV, hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+              }).format(new Date(updatedAt))
+            : kyivTime(now);
+          showError("The live feed has not published a future Grand Prix date yet.");
+          return;
+        }
+        const weekend = sessions
+          .filter((session) => Number(session.meeting_key) === Number(race.meeting_key))
+          .sort((a, b) => a.startMs - b.startMs);
+        if (!weekend.length) throw new Error("No sessions were published for this Grand Prix.");
+        const raceEvent = weekend.find((session) => session.session_name === "Race") || race;
+        const current = weekend.find((session) => now >= session.startMs && now < session.endMs)
+          || weekend.find((session) => session.startMs > now)
+          || weekend[weekend.length - 1];
+        activeSession = current;
+
+        $("raceTitle").textContent = `${race.location || race.country_name} GP`;
+        setHistoricalVictoryPhoto(race);
+        $("raceCountry").textContent = `${race.country_name || "Country"} · ${race.location || ""}`.trim();
+        $("raceCircuit").textContent = race.circuit_short_name || "Circuit";
+        $("raceDate").textContent = fullDateFormatter.format(new Date(raceEvent.startMs)).toUpperCase();
+        $("weekendRound").textContent = `${weekend.length} SESSIONS`;
+        const list = $("scheduleList");
+        list.replaceChildren();
+        weekend.forEach((session) => {
+          const row = document.createElement("div");
+          row.className = "session-row" + (session.session_key === current.session_key ? " is-next" : "");
+          const code = document.createElement("span");
+          code.className = "session-code";
+          code.textContent = codeFor(session.session_name);
+          const name = document.createElement("span");
+          name.className = "session-name";
+          name.textContent = session.session_name;
+          const time = document.createElement("span");
+          time.className = "session-time";
+          time.textContent = `${dayFormatter.format(new Date(session.startMs))} · ${kyivTime(session.startMs)}`;
+          row.append(code, name, time);
+          list.appendChild(row);
+        });
+        const offline = source === "cache";
+        $("connection").classList.toggle("offline", offline);
+        $("connectionText").textContent = offline ? "CACHED DATA" : "SCHEDULE DATA";
+        $("updatedAt").textContent = updatedAt
+          ? new Intl.DateTimeFormat("uk-UA", {
+              timeZone: KYIV, hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+            }).format(new Date(updatedAt))
+          : kyivTime(now);
+        clearError();
+        renderCountdown();
+        renderTrack(race);
+        if (timerHandle) clearInterval(timerHandle);
+        timerHandle = window.setInterval(renderCountdown, 1000);
+      }
+
+      function setHistoricalVictoryPhoto(race) {
+        const photo = historicalVictoryPhotos[Number(race?.circuit_key)];
+        const hero = document.querySelector(".hero");
+        const image = $("heroPhoto");
+        const shade = $("heroPhotoShade");
+        const label = $("archiveLabel");
+        hero.classList.toggle("has-archive-photo", Boolean(photo));
+        image.hidden = !photo;
+        shade.hidden = !photo;
+        label.hidden = !photo;
+        if (photo) {
+          if (!image.src.endsWith(photo.src)) image.src = photo.src;
+          image.alt = photo.alt;
+          label.textContent = photo.caption;
+        } else {
+          image.removeAttribute("src");
+          image.alt = "";
+        }
+      }
+
+      async function refreshDashboard() {
+        try {
+          const cached = window.AndroidF1?.getSchedule();
+          if (cached) {
+            const sessions = sessionsFrom(cached);
+            if (sessions.length) {
+              const savedAt = window.AndroidF1?.getUpdatedAt?.();
+              render(sessions, Number(savedAt) || null, "cache");
+            }
+          }
+        } catch (error) {
+          showError(error instanceof Error ? error.message : "Cached calendar could not be read.");
+        }
+
+        try {
+          const year = new Date().getUTCFullYear();
+          const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/races.json`, {
+            cache: "no-store"
+          });
+          if (!response.ok) throw new Error(`Calendar feed returned HTTP ${response.status}.`);
+          const data = await response.json();
+          let entries = sessionsFromJolpica(data);
+          let raw = JSON.stringify(entries);
+          let sessions = sessionsFrom(entries);
+          if (!sessions.length) throw new Error(`Jolpica has no session dates for ${year}.`);
+          if (!nextRace(sessions, Date.now())) {
+            try {
+              const nextYearResponse = await fetch(
+                `https://api.jolpi.ca/ergast/f1/${year + 1}/races.json`,
+                { cache: "no-store" }
+              );
+              if (nextYearResponse.ok) {
+                const nextYearData = await nextYearResponse.json();
+                const nextYearEntries = sessionsFromJolpica(nextYearData);
+                const nextYearSessions = sessionsFrom(nextYearEntries);
+                if (nextRace(nextYearSessions, Date.now())) {
+                  entries = entries.concat(nextYearEntries);
+                  raw = JSON.stringify(entries);
+                  sessions = sessionsFrom(entries);
+                }
+              }
+            } catch {
+              showError("The next-season calendar is not available yet; no date has been assumed.");
+            }
+          }
+          window.AndroidF1?.saveSchedule(raw);
+          render(sessions, Date.now(), "live");
+        } catch (error) {
+          if (!activeSession) {
+            window.AndroidF1?.refresh();
+            showError(error instanceof Error
+              ? `Calendar unavailable: ${error.message}`
+              : "Calendar unavailable. Retrying in the background.");
+            $("connection").classList.add("offline");
+            $("connectionText").textContent = "OFFLINE";
+          } else {
+            showError("Showing saved calendar; the live feed could not be reached.");
+            $("connection").classList.add("offline");
+            $("connectionText").textContent = "CACHED DATA";
+          }
+        }
+      }
+
+      window.refreshDashboard = refreshDashboard;
+      refreshDashboard();
+      refreshHandle = window.setInterval(refreshDashboard, 30 * 60 * 1000);
+      window.addEventListener("pagehide", () => {
+        if (timerHandle) clearInterval(timerHandle);
+        if (refreshHandle) clearInterval(refreshHandle);
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>
