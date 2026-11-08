@@ -21,7 +21,8 @@ shape when resized.
 - The app has separate **HOME** and **LIVE TIMING** sections. Live Timing uses
   OpenF1 session, driver, position, lap, interval, tyre-stint, weather,
   race-control, pit-stop, team-radio, and location feeds. Live sessions refresh
-  every 15 seconds; completed sessions are clearly marked **LAST SESSION**.
+  every 30 seconds with requests paced below the public API rate limit;
+  completed sessions are clearly marked **LAST SESSION**.
   The latest successful response is cached on-device and marked **CACHED**
   when the network is unavailable. Unsupported or unavailable data is shown as
   unavailable rather than being fabricated.
@@ -118,4 +119,9 @@ One or any racing team.
 
 Live session data comes from [OpenF1](https://openf1.org/). Availability of
 historical data, team-radio recordings, and circuit GPS records depends on the
-upstream feed.
+upstream feed. OpenF1 documents historical data as free; real-time access
+requires a paid subscription. The app preserves OpenF1 for historical data and
+uses [Jolpica](https://jolpi.ca/) for the schedule; Jolpica does not provide
+live telemetry. A free live alternative such as FastF1 is a Python client, not
+a hosted API, so using it in this Android app requires a separately hosted
+service.

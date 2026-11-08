@@ -5,6 +5,8 @@
   const CACHE_KEY = "verstappen-racedash-openf1-v1";
   const $ = (id) => document.getElementById(id);
   const state = { session: null, data: null, tab: "leaderboard", timer: 0, loading: false };
+  let requestQueue = Promise.resolve();
+  let lastRequestAt = 0;
   const colorFor = (driver) => {
     const color = String(driver.team_colour || "").replace(/^#/, "");
     return /^[0-9a-f]{6}$/i.test(color) ? `#${color}` : "#8595a8";
@@ -14,7 +16,7 @@
     return Number.isFinite(parsed) ? parsed : 0;
   };
 
-  async function getJson(path) {
+  async function fetchJson(path) {
     const controller = new AbortController();
     const timer = window.setTimeout(() => controller.abort(), 12000);
     try {
@@ -30,6 +32,17 @@
     } finally {
       window.clearTimeout(timer);
     }
+  }
+
+  function getJson(path) {
+    const request = requestQueue.then(async () => {
+      const delay = Math.max(0, 400 - (Date.now() - lastRequestAt));
+      if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
+      lastRequestAt = Date.now();
+      return fetchJson(path);
+    });
+    requestQueue = request.then(() => undefined, () => undefined);
+    return request;
   }
 
   function readCache() {
@@ -469,11 +482,11 @@
       saveCache(cacheValue);
       renderHeader(state.session, state.active, state.data);
       $("liveCacheNote").textContent = state.active
-        ? "LIVE · OpenF1 refreshes every 15 seconds"
+        ? "LIVE · OpenF1 refreshes every 30 seconds"
         : `LAST SESSION · ${new Date(dateValue(state.session.date_start)).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })}`;
       setTab(state.tab);
       if (state.timer) clearInterval(state.timer);
-      state.timer = window.setInterval(refreshLive, state.active ? 15000 : 5 * 60 * 1000);
+      state.timer = window.setInterval(refreshLive, state.active ? 30000 : 5 * 60 * 1000);
     } catch (error) {
       console.warn("Live Timing refresh failed.", error);
       if (cached?.data && cached.sessionKey) {
