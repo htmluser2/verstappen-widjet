@@ -16,11 +16,12 @@
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
-    <View
+    <TextView
         android:id="@+id/widget_photo_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/widget_photo_scrim"
+        android:text=""
         android:visibility="gone" />
 
     <LinearLayout
@@ -70,7 +71,7 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <View
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
@@ -197,8 +198,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:maxLines="1"
-            android:text="FP1 · FP2 · QUALI · RACE"
+            android:maxLines="5"
+            android:text="ПТ, 6 ЛИС. · ПРАКТИКА 1 · 17:30"
             android:textColor="#88A1BF"
             android:textSize="8sp"
             android:textStyle="bold" />

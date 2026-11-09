@@ -4,7 +4,34 @@
   const API = "https://api.openf1.org/v1";
   const CACHE_KEY = "verstappen-racedash-openf1-v1";
   const $ = (id) => document.getElementById(id);
-  const state = { session: null, data: null, tab: "leaderboard", timer: 0, loading: false };
+  const state = {
+    session: null,
+    data: null,
+    official: {},
+    feedStatus: "DISCONNECTED",
+    tab: "leaderboard",
+    timer: 0,
+    renderTimer: 0,
+    pendingTopics: new Set(),
+    selectedDriverNumber: null,
+    mapGeometry: null,
+    mapLocations: [],
+    mapSamples: {},
+    mapBounds: null,
+    mapFrame: 0,
+    mapRendered: null,
+    loading: false
+  };
+
+  // Playback clock for the map dot. Pausing freezes the dot at its last
+  // interpolated position; resuming continues from real telemetry time.
+  const playback = { paused: false, frozenPoint: null };
+  window.raceDashPlayback = {
+    get paused() { return playback.paused; },
+    pause() { playback.paused = true; if (state.mapFrame) { cancelAnimationFrame(state.mapFrame); state.mapFrame = 0; } },
+    resume() { playback.paused = false; playback.frozenPoint = null; if (state.tab === "map" && state.mapRendered) state.mapRendered(); },
+    toggle() { this.paused ? this.resume() : this.pause(); }
+  };
   let requestQueue = Promise.resolve();
   let lastRequestAt = 0;
   const colorFor = (driver) => {
@@ -119,6 +146,236 @@
     return `${minutes ? `${minutes}:` : ""}${String(Math.floor(value % 60)).padStart(minutes ? 2 : 1, "0")}.${String(Math.floor((value % 1) * 1000)).padStart(3, "0")}`;
   }
 
+  function f1TimeInSeconds(value) {
+    if (value == null) return null;
+    const parts = String(value).split(":").map(Number);
+    if (!parts.length || parts.some((part) => !Number.isFinite(part))) return null;
+    return parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0];
+  }
+
+  function officialData() {
+    const rawDrivers = state.official.DriverList?.Drivers || state.official.DriverList || {};
+    const lines = state.official.TimingData?.Lines || {};
+    const appLines = state.official.TimingAppData?.Lines || {};
+    const drivers = Object.entries(rawDrivers).map(([key, item]) => ({
+      driver_number: item.RacingNumber || key,
+      name_acronym: item.Tla || item.BroadcastName || `#${key}`,
+      team_name: item.TeamName || "",
+      team_colour: item.TeamColour || ""
+    }));
+    const positions = [];
+    const intervals = [];
+    const laps = [];
+    const stints = [];
+
+    drivers.forEach((driver) => {
+      const number = String(driver.driver_number);
+      const line = lines[number] || lines[driver.driver_number] || {};
+      const position = Number(line.Position);
+      if (Number.isFinite(position) && position > 0) {
+        positions.push({ driver_number: number, position });
+      }
+
+      const interval = line.IntervalToPositionAhead?.Value
+        || line.GapToLeader?.Value;
+      if (interval != null) {
+        intervals.push({ driver_number: number, gap_to_leader: interval });
+      }
+
+      const lastLap = f1TimeInSeconds(line.LastLapTime?.Value);
+      if (lastLap != null) {
+        laps.push({ driver_number: number, lap_duration: lastLap, date_start: Date.now() });
+      }
+
+      const stintValues = Object.values(appLines[number]?.Stints || {});
+      const stint = stintValues.at(-1);
+      if (stint?.Compound) {
+        stints.push({
+          driver_number: number,
+          compound: stint.Compound,
+          tyre_age: stint.TotalLaps
+        });
+      }
+    });
+
+    return { drivers, positions, intervals, laps, stints };
+  }
+
+  function officialPositionRecords() {
+    const payload = state.official["Position.z"];
+    if (!payload || typeof payload !== "object") return [];
+    const root = payload.Position || payload;
+    const entries = root.Entries || root;
+    if (!entries || typeof entries !== "object") return [];
+
+    return Object.entries(entries).flatMap(([number, value]) => {
+      if (!/^\d+$/.test(number) || !value || typeof value !== "object") return [];
+      const rawPoints = value.Entries;
+      const points = Array.isArray(rawPoints)
+        ? rawPoints
+        : rawPoints && typeof rawPoints === "object"
+          ? Object.values(rawPoints)
+          : [value];
+      const point = points.at(-1)?.Position || points.at(-1);
+      if (!point || !Number.isFinite(Number(point.X)) || !Number.isFinite(Number(point.Y))) return [];
+      return [{
+        driver_number: number,
+        x: Number(point.X),
+        y: Number(point.Y),
+        status: point.Status || value.Status || "",
+        date: point.Timestamp || point.Utc || ""
+      }];
+    });
+  }
+
+  function officialMessages() {
+    const source = state.official.RaceControlMessages || {};
+    const messages = source.Messages || source;
+    return Array.isArray(messages) ? messages : Object.values(messages);
+  }
+
+  function renderOfficialEvents() {
+    const panel = $("livePanel");
+    panel.replaceChildren();
+    const events = officialMessages()
+      .filter((item) => item && typeof item === "object" && (item.Message || item.Category))
+      .sort((a, b) => dateValue(b.Utc || b.Date || b.Timestamp) - dateValue(a.Utc || a.Date || a.Timestamp));
+    const heading = el("div", "live-panel-heading");
+    heading.append(el("strong", "", "RACE CONTROL"), el("span", "", "F1 OFFICIAL FEED"));
+    panel.appendChild(heading);
+    if (!events.length) {
+      panel.appendChild(el("div", "live-empty", "No race-control messages have been sent for this session."));
+      return;
+    }
+    events.slice(0, 80).forEach((item) => {
+      const row = el("div", "live-event");
+      row.append(el("time", "", shortTime(item.Utc || item.Date || item.Timestamp)));
+      const copy = el("div", "", [item.Flag, item.Category, item.Message].filter(Boolean).join(" · "));
+      if (item.RacingNumber || item.Scope) {
+        copy.appendChild(el("small", "", [item.RacingNumber && `Driver ${item.RacingNumber}`, item.Scope].filter(Boolean).join(" · ")));
+      }
+      row.appendChild(copy);
+      panel.appendChild(row);
+    });
+  }
+
+  function renderOfficialSession(renderPanel = true) {
+    const info = state.official.SessionInfo;
+    if (!info && !state.official.DriverList) return false;
+    if (state.timer) {
+      clearInterval(state.timer);
+      state.timer = 0;
+    }
+
+    const meeting = info?.Meeting || {};
+    const circuit = meeting.Circuit || {};
+    const statusValue = state.official.SessionStatus;
+    const sessionStatus = typeof statusValue === "string"
+      ? statusValue
+      : statusValue?.Status || statusValue?.Message || "";
+    const sessionIsActive = /started|active|green/i.test(sessionStatus);
+    const live = sessionIsActive && state.feedStatus === "CONNECTED";
+    const final = /finished|finalised|complete/i.test(sessionStatus);
+    const badge = $("liveStatus");
+    badge.textContent = live ? "LIVE" : final ? "FINAL" : state.feedStatus === "CONNECTED" ? "CONNECTED" : "STALE";
+    badge.dataset.live = String(live);
+    badge.dataset.state = state.feedStatus.startsWith("ERROR") ? "error" : "";
+
+    setText("liveGrandPrix", meeting.Name || info?.MeetingName || info?.Name || "F1 timing feed");
+    setText("liveCircuit", [circuit.ShortName || meeting.Location, meeting.Country?.Name].filter(Boolean).join(" · "));
+    setText("liveSessionType", info?.Name || info?.Type || "—");
+
+    const lapCount = state.official.LapCount || {};
+    const lines = state.official.TimingData?.Lines || {};
+    const completedLaps = Number(lapCount.CurrentLap)
+      || Math.max(0, ...Object.values(lines).map((line) => Number(line.NumberOfLaps) || 0));
+    const totalLaps = Number(lapCount.TotalLaps || info?.TotalLaps);
+    setText("liveLap", completedLaps
+      ? `${completedLaps}${totalLaps ? ` / ${totalLaps}` : ""}`
+      : "—");
+
+    const weather = state.official.WeatherData || {};
+    const track = weather.TrackTemp?.Value ?? weather.TrackTemp;
+    const air = weather.AirTemp?.Value ?? weather.AirTemp;
+    setText("liveWeather", track != null || air != null
+      ? `${track == null ? "—" : `${track}°`} / ${air == null ? "—" : `${air}°`}C`
+      : "—");
+    $("liveNextGp").hidden = live;
+    $("liveCacheNote").textContent = state.feedStatus === "CONNECTED"
+      ? `F1 OFFICIAL FEED · ${live ? "LIVE" : final ? "SESSION FINAL" : "CONNECTED"} · UPDATED ${new Date().toLocaleTimeString("en-GB")}`
+      : `${state.feedStatus} · LAST F1 DATA ${new Date().toLocaleTimeString("en-GB")}`;
+
+    state.data = officialData();
+    state.session = {
+      circuit_key: circuit.Key ?? state.session?.circuit_key,
+      circuit_short_name: circuit.ShortName || state.session?.circuit_short_name,
+      session_key: null
+    };
+    if (renderPanel) setTab(state.tab);
+    return true;
+  }
+
+  function updateOfficialTopic(topic, incoming) {
+    const previous = state.official[topic];
+    if (topic === "SessionInfo" && previous?.Key && incoming?.Key && previous.Key !== incoming.Key) {
+      state.official = {};
+    }
+    if (topic === "TimingData" && incoming && typeof incoming === "object" && incoming.Lines) {
+      const lines = { ...(previous?.Lines || {}) };
+      Object.entries(incoming.Lines).forEach(([number, line]) => {
+        lines[number] = { ...(lines[number] || {}), ...line };
+      });
+      state.official[topic] = { ...(previous || {}), ...incoming, Lines: lines };
+    } else if (topic === "Position.z") {
+      const previousPosition = previous?.Position || previous || {};
+      const incomingPosition = incoming?.Position || incoming || {};
+      const previousEntries = previousPosition.Entries || previousPosition;
+      const incomingEntries = incomingPosition.Entries || incomingPosition;
+      const mergedEntries = { ...previousEntries };
+      Object.entries(incomingEntries).forEach(([number, position]) => {
+        if (/^\d+$/.test(number) && position && typeof position === "object") {
+          mergedEntries[number] = { ...(mergedEntries[number] || {}), ...position };
+        }
+      });
+      state.official[topic] = {
+        ...previous,
+        ...incoming,
+        Position: {
+          ...previousPosition,
+          ...incomingPosition,
+          Entries: mergedEntries
+        }
+      };
+    } else if (topic === "RaceControlMessages" && incoming?.Messages && previous?.Messages) {
+      state.official[topic] = {
+        ...previous,
+        ...incoming,
+        Messages: { ...previous.Messages, ...incoming.Messages }
+      };
+    } else if (incoming && typeof incoming === "object" && !Array.isArray(incoming) && previous && typeof previous === "object") {
+      state.official[topic] = { ...previous, ...incoming };
+    } else {
+      state.official[topic] = incoming;
+    }
+
+    state.pendingTopics.add(topic);
+    if (state.renderTimer) return;
+    state.renderTimer = window.setTimeout(() => {
+      state.renderTimer = 0;
+      const changedTopics = new Set(state.pendingTopics);
+      state.pendingTopics.clear();
+      if (!renderOfficialSession(false)) return;
+      if (state.tab === "leaderboard"
+        && ["DriverList", "TimingData", "TimingAppData"].some((name) => changedTopics.has(name))) {
+        setTab(state.tab);
+      } else if (state.tab === "events" && changedTopics.has("RaceControlMessages")) {
+        setTab(state.tab);
+      } else if (state.tab === "map" && changedTopics.has("Position.z") && state.mapGeometry) {
+        renderMap(state.data || officialData(), state.mapGeometry, state.mapLocations);
+      }
+    }, 350);
+  }
+
   function latestByDriver(records, driverKey = "driver_number", timestampKey = "date") {
     const result = new Map();
     records.slice().sort((a, b) => dateValue(a[timestampKey]) - dateValue(b[timestampKey]))
@@ -134,6 +391,7 @@
     const badge = $("liveStatus");
     badge.textContent = live ? "LIVE" : "LAST SESSION";
     badge.dataset.live = String(live);
+    badge.dataset.state = "";
 
     const laps = data.laps || [];
     const currentLap = laps.reduce((maximum, lap) => Math.max(maximum, Number(lap.lap_number) || 0), 0);
@@ -172,12 +430,13 @@
     });
 
     const heading = el("div", "live-panel-heading");
-    heading.append(el("strong", "", "SESSION CLASSIFICATION"), el("span", "", `${records.length} DRIVERS · OPENF1`));
+    heading.append(el("strong", "", "SESSION CLASSIFICATION"),
+      el("span", "", `${records.length} DRIVERS · ${state.official.DriverList ? "F1 OFFICIAL" : "OPENF1"}`));
     const scroll = el("div", "live-table-scroll");
     const table = el("table", "live-table");
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["POS", "DRIVER", "TEAM", "GAP", "LAST LAP", "TYRE"].forEach((label) => headerRow.appendChild(el("th", "", label)));
+    ["POS", "DRIVER", "GAP", "LAST LAP", "TYRE"].forEach((label) => headerRow.appendChild(el("th", "", label)));
     thead.appendChild(headerRow);
     const tbody = document.createElement("tbody");
     records.forEach(({ driver, position, lap, interval, stint }, index) => {
@@ -188,9 +447,13 @@
       const driverLockup = el("div", "live-driver");
       const stripe = el("i", "team-stripe");
       stripe.style.setProperty("--team-color", colorFor(driver));
-      driverLockup.append(stripe, el("span", "", driver.name_acronym || driver.broadcast_name || `#${driver.driver_number}`));
+      const driverCopy = el("span", "live-driver-copy");
+      driverCopy.append(
+        el("strong", "", driver.name_acronym || driver.broadcast_name || `#${driver.driver_number}`),
+        el("small", "", driver.team_name || "Formula 1")
+      );
+      driverLockup.append(stripe, driverCopy);
       driverCell.appendChild(driverLockup);
-      const team = el("td", "live-team", driver.team_name || "—");
       const gapValue = interval?.gap_to_leader;
       const gap = el("td", "live-gap", Number(position?.position) === 1
         ? "LEADER"
@@ -204,7 +467,7 @@
         compound ? compound.slice(0, 1) : "—");
       tyre.title = compound ? `${compound}${stint.tyre_age ? ` · lap ${stint.tyre_age}` : ""}` : "Tyre data unavailable";
       tyreCell.appendChild(tyre);
-      row.append(positionCell, driverCell, team, gap, lastLap, tyreCell);
+      row.append(positionCell, driverCell, gap, lastLap, tyreCell);
       tbody.appendChild(row);
     });
     table.append(thead, tbody);
@@ -262,6 +525,59 @@
     });
   }
 
+  // Builds per-driver timestamped position samples so the map dot can be
+  // interpolated smoothly between real telemetry frames. No invented data:
+  // only records the feed actually delivered are used.
+  function buildMapSamples(positionRecords) {
+    const samples = {};
+    positionRecords.forEach((item) => {
+      if (!Number.isFinite(Number(item.x)) || !Number.isFinite(Number(item.y))) return;
+      const number = String(item.driver_number);
+      if (!samples[number]) samples[number] = [];
+      samples[number].push({ t: dateValue(item.date), x: Number(item.x), y: Number(item.y) });
+    });
+    Object.values(samples).forEach((list) => list.sort((a, b) => a.t - b.t));
+    return samples;
+  }
+
+  // Linear interpolation between the two telemetry samples that bracket the
+  // requested time. Returns null outside the covered range (status shown
+  // instead of a fabricated position).
+  function interpolateSample(samples, atTime) {
+    if (!samples || samples.length < 1) return null;
+    if (samples.length === 1) return samples[0];
+    if (atTime <= samples[0].t) return samples[0];
+    if (atTime >= samples[samples.length - 1].t) return samples[samples.length - 1];
+    let low = 0;
+    let high = samples.length - 1;
+    while (high - low > 1) {
+      const mid = (low + high) >> 1;
+      if (samples[mid].t <= atTime) low = mid; else high = mid;
+    }
+    const a = samples[low], b = samples[high];
+    const span = b.t - a.t;
+    if (span <= 0) return b;
+    const f = (atTime - a.t) / span;
+    return { t: atTime, x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+  }
+
+  function mapProjection(records) {
+    const xs = records.map((item) => Number(item.x)).filter(Number.isFinite);
+    const ys = records.map((item) => Number(item.y)).filter(Number.isFinite);
+    if (!xs.length || !ys.length) return null;
+    return {
+      minX: Math.min(...xs), maxX: Math.max(...xs),
+      minY: Math.min(...ys), maxY: Math.max(...ys)
+    };
+  }
+
+  function projectPoint(bounds, x, y) {
+    return {
+      x: 24 + ((x - bounds.minX) / (bounds.maxX - bounds.minX || 1)) * 352,
+      y: 226 - ((y - bounds.minY) / (bounds.maxY - bounds.minY || 1)) * 202
+    };
+  }
+
   function makeCircuitPath(geoJson) {
     const feature = geoJson.features?.find((item) => item.geometry?.type === "LineString")
       || geoJson.features?.[0];
@@ -305,9 +621,26 @@
   function renderMap(data, geoJson, locations) {
     const panel = $("livePanel");
     panel.replaceChildren();
+    const feedPositions = officialPositionRecords()
+      .filter((item) => !item.status || /ontrack|pitlane/i.test(item.status));
+    const positionRecords = feedPositions.length
+      ? feedPositions
+      : Array.from(latestByDriver(locations).values());
+    const isLive = feedPositions.length > 0;
     const heading = el("div", "live-panel-heading");
     heading.append(el("strong", "", state.session.circuit_short_name || "TRACK MAP"),
-      el("span", "", locations.length ? "OPENF1 GPS SNAPSHOT" : "CIRCUIT GEOMETRY"));
+      el("span", "", isLive ? "LIVE CAR POSITIONS" : locations.length ? "OPENF1 GPS SNAPSHOT" : "CIRCUIT GEOMETRY"));
+    const playbackBar = el("div", "map-playback-bar");
+    const playPause = el("button", "map-play-btn", playback.paused ? "▶ RESUME" : "⏸ PAUSE");
+    playPause.type = "button";
+    playPause.setAttribute("aria-label", playback.paused ? "Resume map dot motion" : "Pause map dot motion");
+    playPause.addEventListener("click", () => {
+      window.raceDashPlayback.toggle();
+      playPause.textContent = window.raceDashPlayback.paused ? "▶ RESUME" : "⏸ PAUSE";
+    });
+    const status = el("span", "map-playback-status",
+      playback.paused ? "ПАУЗА · точка зупинена" : isLive ? "ТЕЛЕМЕТРІЯ F1 · ПОЗИЦІЯ РЕАЛЬНА" : "GPS ЗНІМОК · ОСТАННЯ ВІДОМА ПОЗИЦІЯ");
+    playbackBar.append(playPause, status);
     const wrap = el("div", "live-map-wrap");
     const svgNS = "http://www.w3.org/2000/svg";
     const geometry = makeCircuitPath(geoJson);
@@ -315,7 +648,7 @@
     svg.setAttribute("class", "live-map");
     svg.setAttribute("viewBox", "0 0 400 250");
     svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Circuit outline and available OpenF1 car locations");
+    svg.setAttribute("aria-label", "Circuit outline and selectable driver positions");
     const glow = document.createElementNS(svgNS, "path");
     glow.setAttribute("class", "track-glow");
     glow.setAttribute("d", geometry.path);
@@ -324,33 +657,114 @@
     path.setAttribute("d", geometry.path);
     svg.append(glow, path);
 
-    const latestLocations = latestByDriver(locations);
     const byNumber = new Map((data.drivers || []).map((driver) => [String(driver.driver_number), driver]));
-    const xs = locations.map((item) => Number(item.x)).filter(Number.isFinite);
-    const ys = locations.map((item) => Number(item.y)).filter(Number.isFinite);
-    if (xs.length && ys.length) {
-      const minX = Math.min(...xs), maxX = Math.max(...xs);
-      const minY = Math.min(...ys), maxY = Math.max(...ys);
-      latestLocations.forEach((location, number) => {
-        if (!Number.isFinite(Number(location.x)) || !Number.isFinite(Number(location.y))) return;
-        const x = 24 + ((Number(location.x) - minX) / (maxX - minX || 1)) * 352;
-        const y = 226 - ((Number(location.y) - minY) / (maxY - minY || 1)) * 202;
+    const positions = latestByDriver(data.positions || []);
+    state.mapSamples = buildMapSamples(positionRecords);
+    state.mapBounds = mapProjection(positionRecords);
+    let selectedPosition = positionRecords.find((item) =>
+      String(item.driver_number) === String(state.selectedDriverNumber)
+    );
+    if (!selectedPosition && positionRecords.length) {
+      selectedPosition = positionRecords[0];
+      state.selectedDriverNumber = String(selectedPosition.driver_number);
+    }
+
+    // Static competitor dots at their latest real telemetry position.
+    if (state.mapBounds) {
+      positionRecords.forEach((location) => {
+        const number = String(location.driver_number);
+        if (number === String(state.selectedDriverNumber)) return;
+        const p = projectPoint(state.mapBounds, Number(location.x), Number(location.y));
         const driver = byNumber.get(number);
         const dot = document.createElementNS(svgNS, "circle");
         dot.setAttribute("class", "car-dot");
-        dot.setAttribute("cx", x.toFixed(1));
-        dot.setAttribute("cy", y.toFixed(1));
+        dot.setAttribute("cx", p.x.toFixed(1));
+        dot.setAttribute("cy", p.y.toFixed(1));
         dot.setAttribute("r", "5");
         dot.setAttribute("fill", colorFor(driver || {}));
+        dot.setAttribute("role", "button");
+        dot.setAttribute("tabindex", "0");
+        dot.setAttribute("aria-label", `${driver?.name_acronym || `Driver ${number}`}${positions.get(number)?.position ? `, position ${positions.get(number).position}` : ""}`);
+        const selectDriver = () => {
+          state.selectedDriverNumber = number;
+          renderMap(data, geoJson, locations);
+        };
+        dot.addEventListener("click", selectDriver);
+        dot.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectDriver();
+          }
+        });
         const title = document.createElementNS(svgNS, "title");
-        title.textContent = `${driver?.name_acronym || `#${number}`} · OpenF1 GPS ${location.x}, ${location.y}`;
+        title.textContent = `${driver?.name_acronym || `#${number}`}${positions.get(number)?.position ? ` · P${positions.get(number).position}` : ""}`;
         dot.appendChild(title);
         svg.appendChild(dot);
       });
     }
+
+    // Animated dot for the selected driver. Moves through real telemetry
+    // samples with linear interpolation; pauses freeze it, resumes continue.
+    if (selectedPosition && state.mapBounds) {
+      const number = String(selectedPosition.driver_number);
+      const driver = byNumber.get(number) || {};
+      const animated = document.createElementNS(svgNS, "g");
+      animated.setAttribute("class", "tracked-dot");
+      const halo = document.createElementNS(svgNS, "circle");
+      halo.setAttribute("class", "tracked-dot-halo");
+      halo.setAttribute("r", "12");
+      halo.setAttribute("fill", colorFor(driver));
+      const core = document.createElementNS(svgNS, "circle");
+      core.setAttribute("class", "tracked-dot-core");
+      core.setAttribute("r", "7");
+      core.setAttribute("fill", colorFor(driver));
+      core.setAttribute("stroke", "#fff");
+      core.setAttribute("stroke-width", "2");
+      const label = document.createElementNS(svgNS, "text");
+      label.setAttribute("class", "tracked-dot-label");
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("dy", "-14");
+      label.textContent = driver.name_acronym || `#${number}`;
+      animated.append(halo, core, label);
+      svg.appendChild(animated);
+
+      const placeAnimated = (point) => {
+        if (!point) return;
+        const p = projectPoint(state.mapBounds, point.x, point.y);
+        animated.setAttribute("transform", `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`);
+      };
+
+      const samples = state.mapSamples[number] || [];
+      const startTime = samples.length ? samples[0].t : dateValue(selectedPosition.date);
+      const endTime = samples.length ? samples[samples.length - 1].t : startTime;
+      if (samples.length > 1) {
+        const tick = () => {
+          if (state.tab !== "map") { state.mapFrame = 0; return; }
+          if (playback.paused) {
+            placeAnimated(playback.frozenPoint);
+          } else {
+            // Real-time clock: the dot tracks the actual telemetry timeline,
+            // clamped to the session range the feed actually delivered.
+            const t = Math.min(Date.now(), endTime);
+            const point = t < startTime ? null : interpolateSample(samples, t);
+            if (point) {
+              playback.frozenPoint = point;
+              placeAnimated(point);
+            }
+          }
+          state.mapFrame = requestAnimationFrame(tick);
+        };
+        if (state.mapFrame) cancelAnimationFrame(state.mapFrame);
+        state.mapFrame = requestAnimationFrame(tick);
+      } else {
+        placeAnimated(interpolateSample(samples, Date.now()));
+      }
+      state.mapRendered = () => renderMap(data, geoJson, locations);
+    }
+
     const legend = el("div", "map-legend");
-    const positions = latestByDriver(data.positions || []);
-    Array.from(latestLocations.keys()).forEach((number) => {
+    positionRecords.forEach((location) => {
+      const number = String(location.driver_number);
       const driver = byNumber.get(number) || {};
       const item = el("span");
       const dot = el("i");
@@ -358,12 +772,32 @@
       item.append(dot, document.createTextNode(`${driver.name_acronym || `#${number}`}${positions.get(number)?.position ? ` · P${positions.get(number).position}` : ""}`));
       legend.appendChild(item);
     });
-    wrap.append(svg);
+    wrap.append(svg, playbackBar);
     if (legend.childNodes.length) {
       wrap.append(legend);
     } else {
       wrap.appendChild(el("div", "live-empty", "No real GPS positions are available for this session snapshot."));
     }
+    if (selectedPosition) {
+      const number = String(selectedPosition.driver_number);
+      const driver = byNumber.get(number) || {};
+      const detail = el("div", "map-driver-detail");
+      const stripe = el("i", "map-driver-color");
+      stripe.style.setProperty("--team-color", colorFor(driver));
+      const copy = el("div", "map-driver-copy");
+      copy.append(
+        el("strong", "", `${driver.name_acronym || `#${number}`} · ${driver.team_name || "Formula 1"}`),
+        el("span", "", `${positions.get(number)?.position ? `P${positions.get(number).position} · ` : ""}${isLive ? "LIVE POSITION" : "LATEST GPS POSITION"}`)
+      );
+      const videoLink = el("a", "map-video-link", "WATCH ON F1 TV ↗");
+      videoLink.href = "https://f1tv.formula1.com/";
+      videoLink.target = "_blank";
+      videoLink.rel = "noreferrer noopener";
+      videoLink.setAttribute("aria-label", `Open F1 TV for ${driver.name_acronym || `driver ${number}`}; camera selection is made on F1 TV`);
+      detail.append(stripe, copy, videoLink);
+      wrap.append(detail);
+    }
+    wrap.append(el("div", "map-video-note", "F1 TV may require an active subscription. Choose the onboard camera there; video is not included in the timing feed."));
     const zoomControls = el("div", "map-legend");
     const zoomIn = el("button", "", "ZOOM +");
     const zoomOut = el("button", "", "ZOOM −");
@@ -421,7 +855,10 @@
     });
     if (!state.data) return;
     if (tab === "leaderboard") renderLeaderboard(state.data);
-    if (tab === "events") renderEvents(state.data);
+    if (tab === "events") {
+      if (state.official.RaceControlMessages) renderOfficialEvents();
+      else renderEvents(state.data);
+    }
     if (tab === "radio") renderRadio(state.data);
     if (tab === "map") loadAndRenderMap();
   }
@@ -430,7 +867,7 @@
     const panel = $("livePanel");
     panel.replaceChildren(el("div", "live-empty", "Loading circuit geometry and available GPS records…"));
     try {
-      const circuitKey = Number(state.session.circuit_key);
+      const circuitKey = Number(state.session?.circuit_key || state.official.SessionInfo?.Meeting?.Circuit?.Key);
       let raw = window.AndroidF1?.getTrackGeoJson(circuitKey) || "";
       if (!raw) {
         const files = {
@@ -447,12 +884,16 @@
       }
       const geoJson = JSON.parse(raw);
       let locations = [];
-      try {
-        locations = await loadLocations(state.session);
-      } catch (error) {
-        console.info("OpenF1 GPS coordinates are unavailable for this map.", error);
+      if (state.session?.session_key) {
+        try {
+          locations = await loadLocations(state.session);
+        } catch (error) {
+          console.info("OpenF1 GPS coordinates are unavailable for this map.", error);
+        }
       }
-      renderMap(state.data, geoJson, locations);
+      state.mapGeometry = geoJson;
+      state.mapLocations = locations;
+      renderMap(state.data || officialData(), state.mapGeometry, state.mapLocations);
     } catch (error) {
       panel.replaceChildren(el("div", "live-empty", `Circuit map unavailable: ${error.message}`));
     }
@@ -480,13 +921,17 @@
         data: state.data
       };
       saveCache(cacheValue);
-      renderHeader(state.session, state.active, state.data);
-      $("liveCacheNote").textContent = state.active
-        ? "LIVE · OpenF1 refreshes every 30 seconds"
-        : `LAST SESSION · ${new Date(dateValue(state.session.date_start)).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })}`;
-      setTab(state.tab);
+      if (!renderOfficialSession()) {
+        renderHeader(state.session, state.active, state.data);
+        $("liveCacheNote").textContent = state.active
+          ? "LAST RESORT · OpenF1 refreshes every 30 seconds"
+          : `OPENF1 HISTORY · ${new Date(dateValue(state.session.date_start)).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })}`;
+        setTab(state.tab);
+      }
       if (state.timer) clearInterval(state.timer);
-      state.timer = window.setInterval(refreshLive, state.active ? 30000 : 5 * 60 * 1000);
+      state.timer = state.feedStatus === "CONNECTED"
+        ? 0
+        : window.setInterval(refreshLive, state.active ? 30000 : 5 * 60 * 1000);
     } catch (error) {
       console.warn("Live Timing refresh failed.", error);
       if (cached?.data && cached.sessionKey) {
@@ -495,19 +940,28 @@
           state.data = cached.data;
           state.active = false;
           state.next = cached.next || null;
-          renderHeader(state.session, false, state.data);
-          $("liveStatus").textContent = "CACHED";
-          $("liveCacheNote").textContent = `CACHED · ${new Date(cached.savedAt || Date.now()).toLocaleString("en-GB")}`;
-          $("livePanel").replaceChildren(el("div", "live-empty", "Showing the last saved OpenF1 data. Live updates are unavailable."));
+          if (!renderOfficialSession()) {
+            renderHeader(state.session, false, state.data);
+            $("liveStatus").textContent = "CACHED";
+            $("liveCacheNote").textContent = `CACHED · ${new Date(cached.savedAt || Date.now()).toLocaleString("en-GB")}`;
+            $("livePanel").replaceChildren(el("div", "live-empty", "Showing the last saved OpenF1 data. Live updates are unavailable."));
+          }
           if (state.timer) clearInterval(state.timer);
-          state.timer = window.setInterval(refreshLive, 5 * 60 * 1000);
+          state.timer = state.feedStatus === "CONNECTED"
+            ? 0
+            : window.setInterval(refreshLive, 5 * 60 * 1000);
           return;
         }
       }
-      $("liveStatus").textContent = "OFFLINE";
-      $("liveStatus").dataset.live = "false";
-      $("liveCacheNote").textContent = "No saved OpenF1 session data is available on this device.";
-      $("livePanel").replaceChildren(el("div", "live-empty", `Live Timing could not load: ${error.message}. Check your connection and try again.`));
+      if (!renderOfficialSession()) {
+        $("liveStatus").textContent = state.feedStatus.startsWith("ERROR") ? "OFFLINE" : "CONNECTING";
+        $("liveStatus").dataset.live = "false";
+        $("liveStatus").dataset.state = state.feedStatus.startsWith("ERROR") ? "error" : "";
+        $("liveCacheNote").textContent = state.feedStatus.startsWith("ERROR")
+          ? state.feedStatus
+          : "Waiting for the free F1 live feed; OpenF1 is unavailable during an active session.";
+        $("livePanel").replaceChildren(el("div", "live-empty", `OpenF1 fallback unavailable: ${error.message}. Waiting for the official F1 timing stream.`));
+      }
     } finally {
       state.loading = false;
     }
@@ -518,19 +972,246 @@
       const target = button.dataset.screen;
       $("homeScreen").hidden = target !== "homeScreen";
       $("liveScreen").hidden = target !== "liveScreen";
+      $("watchScreen").hidden = target !== "watchScreen";
       document.querySelectorAll("[data-screen]").forEach((item) => {
         item.setAttribute("aria-current", String(item === button));
       });
       if (target === "liveScreen") refreshLive();
-      else if (typeof window.refreshDashboard === "function") window.refreshDashboard();
+      if (target === "liveScreen") window.AndroidF1?.startLiveFeed();
+      else {
+        if (state.timer) {
+          clearInterval(state.timer);
+          state.timer = 0;
+        }
+        window.AndroidF1?.stopLiveFeed();
+        if (state.renderTimer) {
+          clearTimeout(state.renderTimer);
+          state.renderTimer = 0;
+        }
+        state.pendingTopics.clear();
+        state.official = {};
+        if (typeof window.refreshDashboard === "function") window.refreshDashboard();
+      }
     });
   });
 
   document.querySelectorAll("[data-live-tab]").forEach((button) => {
     button.addEventListener("click", () => setTab(button.dataset.liveTab));
+
+    // ================= WATCH SCOUT AI =================
+    const ai = {
+      busy: false,
+      timer: 0,
+      log: $("watchAiLog"),
+      status: $("watchAiStatus"),
+      query: $("watchAiQuery"),
+      result: $("watchAiResult"),
+      dot: $("watchAiDot"),
+      root: $("watchAi")
+    };
+
+    const SOURCES = {
+      paid: [
+        { name: "F1 TV Pro", url: "https://f1tv.formula1.com/", note: "Офіційна трансляція всіх сесій у всьому світі. Коментар українською — Макс Подзігун." },
+        { name: "Apple TV (США)", url: "https://tv.apple.com/", note: "Ексклюзивний мовник F1 у США. 7 днів безкоштовного пробного періоду." }
+      ],
+      free: [
+        { name: "F1 Live Timing", url: "https://www.formula1.com/en/f1-live", note: "Офіційна безкоштовна лайв-таблиця з телеметрією для будь-якої сесії." },
+        { name: "Офіційний застосунок F1", url: "https://play.google.com/store/apps/details?hl=en_GB&id=com.softpauer.f1timingapp2014.basic", note: "Безкоштовний leaderboard у телефоні." },
+        { name: "RTBF Auvio (Бельгія)", url: "https://www.rtbf.be/auvio", note: "Державний мовник, весь вік-енд безкоштовно. Геообмежено." },
+        { name: "ORF ON (Австрія)", url: "https://on.orf.at/", note: "Державний мовник, 14 етапів сезону. Геообмежено." },
+        { name: "ServusTV ON (Австрія)", url: "https://www.servustv.com/", note: "11 етапів сезону, включно з ГП Австрії. Геообмежено." },
+        { name: "SRF (Швейцарія)", url: "https://www.srf.ch/sport/formel-1", note: "Всі сесії трьома мовами. Геообмежено." }
+      ],
+      grey: [
+        { name: "F1 TV Archive", url: "https://f1tv.formula1.com/page/493/archive", note: "Архів минулих сесій. Частково безкоштовний." },
+        { name: "Telegram-канали фенів", url: null, note: "Прямі посилання не надаються — високий ризик вірусів і шахрайства." }
+      ]
+    };
+
+    function aiLog(text, delay) {
+      return new Promise((resolve) => {
+        window.setTimeout(() => {
+          const line = document.createElement("div");
+          line.textContent = text;
+          ai.log.appendChild(line);
+          resolve();
+        }, delay);
+      });
+    }
+
+    function nextSessionFromSchedule() {
+      try {
+        const raw = window.AndroidF1?.getSchedule();
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data)) return null;
+        const now = Date.now();
+        const sessions = data
+          .filter((s) => s && !s.is_cancelled && s.date_start && s.date_end)
+          .map((s) => ({ ...s, startMs: Date.parse(s.date_start), endMs: Date.parse(s.date_end) }))
+          .filter((s) => Number.isFinite(s.startMs) && Number.isFinite(s.endMs))
+          .sort((a, b) => a.startMs - b.startMs);
+        return sessions.find((s) => s.endMs > now) || null;
+      } catch { return null; }
+    }
+
+    function sessionKind(session) {
+      const name = String(session.session_name || "").toLowerCase();
+      if (name.includes("practice")) return "practice";
+      if (name.includes("quali") || name.includes("shootout")) return "quali";
+      if (name.includes("race")) return "race";
+      return "other";
+    }
+
+    function kindLabel(kind) {
+      if (kind === "practice") return "ПРАКТИКА";
+      if (kind === "quali") return "КВАЛІФІКАЦІЯ";
+      if (kind === "race") return "ГОНКА";
+      return "СЕСІЯ";
+    }
+
+    function pickFor(kind) {
+      const paid = SOURCES.paid[0];
+      const freeTiming = SOURCES.free[0];
+      const broadcasters = SOURCES.free.slice(2);
+      if (kind === "practice") {
+        return [
+          { ...freeTiming, price: "free", reason: "Найкращий варіант для практики — офіційна телеметрія безкоштовно." },
+          { ...paid, price: "paid", reason: "Платно, але з повним відео всіх практик." },
+          { ...broadcasters[0], price: "free", reason: "Якщо ти в Бельгії — повна трансляція практики безкоштовно." },
+          { ...SOURCES.grey[0], price: "grey", reason: "Архів минулих практик, якщо пропустив наживо." }
+        ];
+      }
+      if (kind === "quali") {
+        return [
+          { ...paid, price: "paid", reason: "Найнадійніший спосіб дивитись кваліфікацію наживо." },
+          { ...freeTiming, price: "free", reason: "Безкоштовний live timing — бачиш часи кола в реальному часі." },
+          { ...broadcasters[1], price: "free", reason: "Австрійський мовник показує кваліфікацію безкоштовно." },
+          { ...SOURCES.grey[0], price: "grey", reason: "Повтор кваліфікації з архіву." }
+        ];
+      }
+      return [
+        { ...paid, price: "paid", reason: "Головна рекомендація — повна гонка наживо з українським коментарем." },
+        { ...broadcasters[0], price: "free", reason: "Безкоштовна державна трансляція, якщо ти в Бельгії." },
+        { ...broadcasters[3], price: "free", reason: "Швейцарський мовник — гонка безкоштовно." },
+        { ...SOURCES.grey[0], price: "grey", reason: "Повтор гонки з офіційного архіву." }
+      ];
+    }
+
+    async function runWatchAi() {
+      if (ai.busy || !ai.root || ai.root.hidden) return;
+      ai.busy = true;
+      ai.dot.dataset.busy = "true";
+      ai.log.replaceChildren();
+      ai.result.replaceChildren();
+      ai.result.hidden = true;
+      const session = nextSessionFromSchedule();
+      if (!session) {
+        ai.status.textContent = "ПОМИЛКА";
+        ai.query.textContent = "Календар недоступний — спробуй пізніше.";
+        ai.busy = false;
+        ai.dot.dataset.busy = "false";
+        return;
+      }
+      const kind = sessionKind(session);
+      const when = new Date(session.startMs).toLocaleString("uk-UA", {
+        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+      });
+      ai.status.textContent = "АНАЛІЗУЮ…";
+      ai.query.textContent = `→ ${kindLabel(kind)}: ${session.location || session.country_name || "ГП"} · ${when}`;
+      await aiLog("Читаю календар з офіційного Jolpica фіду…", 500);
+      await aiLog(`Визначено найближчу сесію: ${kindLabel(kind)}`, 700);
+      await aiLog(`Ключ сесії: ${session.session_key || "—"} · коло: ${session.meeting_key || "—"}`, 600);
+      await aiLog("Порівнюю офіційні та безкоштовні джерела…", 700);
+      await aiLog("Сортую за надійністю та ціною…", 600);
+      await aiLog("Формую рекомендації…", 500);
+      const picks = pickFor(kind);
+      ai.result.replaceChildren();
+      picks.forEach((pick, index) => {
+        const node = document.createElement(pick.url ? "a" : "div");
+        node.className = "watch-ai-pick";
+        node.dataset.price = pick.price;
+        if (pick.url) {
+          node.href = pick.url;
+          node.target = "_blank";
+          node.rel = "noreferrer noopener";
+        }
+        const rank = document.createElement("span");
+        rank.className = "watch-ai-rank";
+        rank.textContent = String(index + 1);
+        const main = document.createElement("div");
+        main.className = "watch-ai-main";
+        const strong = document.createElement("strong");
+        strong.textContent = pick.name;
+        const host = document.createElement("span");
+        host.className = "watch-ai-host";
+        try { host.textContent = pick.url ? new URL(pick.url).hostname.replace(/^www\./, "") : "без посилання"; }
+        catch { host.textContent = ""; }
+        const desc = document.createElement("span");
+        desc.textContent = `${pick.reason} ${pick.note || ""}`.trim();
+        main.append(strong, host, desc);
+        if (index === 0) {
+          const best = document.createElement("span");
+          best.className = "watch-ai-best";
+          best.textContent = "ТОП ВИБІР";
+          main.appendChild(best);
+        }
+        const badge = document.createElement("em");
+        badge.className = "watch-ai-badge";
+        badge.textContent = pick.price === "paid" ? "ПЛАТНО" : pick.price === "grey" ? "РИЗИК" : "БЕЗКОШТОВНО";
+        node.append(rank, main, badge);
+        ai.result.appendChild(node);
+      });
+      ai.result.hidden = false;
+      ai.status.textContent = `ГОТОВО · ${picks.length} ВАРІАНТИ`;  
+      ai.dot.dataset.busy = "false";
+      ai.busy = false;
+    }
+
+    const aiRefresh = $("watchAiRefresh");
+    if (aiRefresh) aiRefresh.addEventListener("click", runWatchAi);
+    window.runWatchAi = runWatchAi;
+  });
+
+  document.querySelectorAll("[data-screen]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.screen === "watchScreen") {
+        window.setTimeout(() => window.runWatchAi?.(), 250);
+      }
+    });
   });
   $("liveNextGp").addEventListener("click", (event) => {
     event.preventDefault();
     document.querySelector('[data-screen="homeScreen"]').click();
   });
+
+  window.onF1FeedStatus = (status) => {
+    state.feedStatus = String(status || "DISCONNECTED");
+    const hasOfficialData = renderOfficialSession();
+    if (!hasOfficialData) {
+      const badge = $("liveStatus");
+      badge.dataset.state = state.feedStatus.startsWith("ERROR") ? "error" : "";
+      if (state.feedStatus.startsWith("ERROR")) {
+        badge.textContent = "OFFLINE";
+        $("liveCacheNote").textContent = state.feedStatus;
+      } else if (state.feedStatus === "CONNECTED") {
+        badge.textContent = "SYNCING";
+        $("liveCacheNote").textContent = "F1 feed connected · waiting for session data";
+      } else if (state.feedStatus === "RECONNECTING") {
+        badge.textContent = "RETRYING";
+        $("liveCacheNote").textContent = "F1 feed disconnected · reconnecting automatically";
+      }
+    }
+  };
+
+  window.onF1FeedMessage = (topic, rawPayload) => {
+    try {
+      updateOfficialTopic(String(topic), JSON.parse(rawPayload));
+    } catch (error) {
+      console.warn(`Could not read F1 live topic ${topic}.`, error);
+      state.feedStatus = "ERROR: invalid live timing payload";
+      $("liveCacheNote").textContent = state.feedStatus;
+    }
+  };
 })();

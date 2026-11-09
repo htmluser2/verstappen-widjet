@@ -16,11 +16,12 @@
         android:scaleType="centerCrop"
         android:visibility="gone" />
 
-    <View
+    <TextView
         android:id="@+id/widget_photo_scrim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/widget_photo_scrim"
+        android:text=""
         android:visibility="gone" />
 
     <ImageView
@@ -62,7 +63,7 @@
                 android:textSize="7sp"
                 android:textStyle="bold" />
 
-            <View
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1" />
@@ -78,7 +79,7 @@
                 android:paddingBottom="2dp"
                 android:text="UPCOMING"
                 android:textColor="#78BAFF"
-                android:textSize="6sp"
+                android:textSize="7sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -164,9 +165,15 @@
 
         <TextView
             android:id="@+id/widget_schedule"
-            android:layout_width="1dp"
-            android:layout_height="1dp"
-            android:visibility="gone" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="НД, 8 ЛИС. · ГОНКА 19:00"
+            android:textColor="#91A9C6"
+            android:textSize="6sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_photo_label"

@@ -8,26 +8,33 @@ adaptive in-app race-control view.
 Long-press an empty area of the Android home screen, open **Widgets**, find
 **Verstappen Race Dash**, and add the layout that fits:
 
-- **Compact (2 × 2):** next session, status, countdown, and Grand Prix.
-- **Wide (4 × 2):** race details, track outline, and weekend timetable.
-- **Large (4 × 4):** expanded race card, circuit map, countdown, and sessions.
+- **Compact (2 × 2):** next session, status, countdown, and the next two start times.
+- **Wide (4 × 2):** race details, track outline, and weekend session start times.
+- **Large (4 × 4):** expanded race card, circuit map, countdown, and timed weekend schedule.
+- **Weekend Schedule (2 × 4):** a vertical, hour-by-hour list of each weekend
+  session in Kyiv time, with the current or next session highlighted.
 
-These are three separate home-screen widget choices, so you can add more than
-one size at the same time. Each keeps its intended layout rather than changing
-shape when resized.
+These are separate home-screen widget choices, so you can add more than one
+size at the same time. Each keeps its intended layout rather than changing shape
+when resized. The wide widget can be resized vertically to make more room for
+the schedule. The compact widget shows the next two sessions; wider layouts
+show session names in Ukrainian with dates and Kyiv start times. The vertical
+schedule uses separate rows and highlights the current or next session.
 
 ## Live data and time
 
 - The app has separate **HOME** and **LIVE TIMING** sections. Live Timing uses
-  OpenF1 session, driver, position, lap, interval, tyre-stint, weather,
-  race-control, pit-stop, team-radio, and location feeds. Live sessions refresh
-  every 30 seconds with requests paced below the public API rate limit;
-  completed sessions are clearly marked **LAST SESSION**.
+  F1's unofficial SignalR stream for session, driver, timing, weather, and
+  race-control updates. Track Map shows selectable live car markers from the
+  F1 position stream when available. OpenF1 remains the historical-data
+  fallback for positions, tyre stints, pit stops, team radio, and GPS locations.
+  Completed sessions are clearly marked **FINAL**.
   The latest successful response is cached on-device and marked **CACHED**
   when the network is unavailable. Unsupported or unavailable data is shown as
   unavailable rather than being fabricated.
 - Session calendar: [Jolpica](https://jolpi.ca/), refreshed when the app opens
-  and periodically in the background.
+  and periodically in the background (WorkManager checks every 15 minutes;
+  Android may defer background work to save battery).
 - Circuit geometry: [f1-circuits](https://github.com/SergioSediq/f1-circuits),
   mapped from Jolpica circuit IDs.
 - The dashboard formats session times with JavaScript
@@ -36,17 +43,16 @@ shape when resized.
 - Session dates come from Jolpica. Session end times are estimated as one hour
   for track sessions and two hours for races; the app does not infer results
   or victories.
-- The app uses the helmet fallback rather than assigning a driver photo to a
-  Grand Prix without a verified matching image.
-- For the São Paulo Grand Prix, the dashboard and home-screen widgets show a
-  clearly labelled archive photo of Max Verstappen on the podium after his
-  verified 2019 Brazilian GP win. It is not presented as the result of a future
-  race or as a photo of him getting out of the car.
+- The dashboard uses a clearly labelled archive photo of Max Verstappen on the
+  podium after his verified 2019 Brazilian GP win as its hero image for every
+  race. The archive label makes clear that it is not a photo of the current
+  Grand Prix or a claim about its result. The track layout is rendered as a
+  compact PNG so it fills its card without excess empty space.
 
 The schedule and circuit feeds require internet access. Previously fetched
-sessions remain available to widgets when offline. Android controls widget
-refresh timing, so countdown text on the home screen may refresh less often
-than the in-app, second-by-second timer.
+sessions remain available to widgets when offline. Android does not permit
+home-screen widgets to request a guaranteed one-minute update interval;
+background refreshes are best effort and may be deferred by battery controls.
 
 ## Build
 
@@ -115,13 +121,12 @@ continuation of the Ergast Developer API. This fan
 application is unofficial and is not affiliated with or endorsed by Formula
 One or any racing team.
 
-### Live timing API
+### Live timing sources
 
-Live session data comes from [OpenF1](https://openf1.org/). Availability of
-historical data, team-radio recordings, and circuit GPS records depends on the
-upstream feed. OpenF1 documents historical data as free; real-time access
-requires a paid subscription. The app preserves OpenF1 for historical data and
-uses [Jolpica](https://jolpi.ca/) for the schedule; Jolpica does not provide
-live telemetry. A free live alternative such as FastF1 is a Python client, not
-a hosted API, so using it in this Android app requires a separately hosted
-service.
+Live Timing connects directly to F1's unofficial, undocumented SignalR stream
+at [`wss://livetiming.formula1.com/signalrcore`](https://github.com/theOehrly/Fast-F1/blob/main/fastf1/livetiming/client.py).
+The app obtains the load-balancer cookie, subscribes to timing topics, and
+reconnects with backoff. The feed is free to access but is not a supported or
+guaranteed public API; it can change, return partial data, or have no live
+session to show. OpenF1 remains the historical-data fallback; its real-time API
+requires a paid subscription. Jolpica supplies the race calendar, not telemetry.

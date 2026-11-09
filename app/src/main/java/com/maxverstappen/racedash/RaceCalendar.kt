@@ -87,6 +87,18 @@ object RaceCalendar {
         else -> sessionName.uppercase(Locale.ROOT)
     }
 
+    fun localizedSessionName(sessionName: String): String = when (sessionName.lowercase(Locale.ROOT)) {
+        "practice 1" -> "Практика 1"
+        "practice 2" -> "Практика 2"
+        "practice 3" -> "Практика 3"
+        "sprint qualifying" -> "Кваліфікація спринту"
+        "sprint shootout" -> "Кваліфікація спринту"
+        "sprint" -> "Спринт"
+        "qualifying" -> "Кваліфікація"
+        "race" -> "Гонка"
+        else -> sessionName
+    }
+
     @Throws(JSONException::class)
     private fun parseTimestamp(value: String): Instant {
         return try {

@@ -152,68 +152,124 @@
     }
 
     .live-shell {
-      --live-bg: #070b12;
       --live-panel: #101927;
-      --live-panel-2: #0c1420;
-      --live-line: rgba(132, 160, 194, .19);
+      --live-panel-2: #0b121d;
+      --live-line: rgba(147, 174, 207, .16);
       --live-gold: #f2c94c;
-      margin-top: 12px;
-      color: #eff4fb;
+      margin-top: 14px;
+      color: #f4f7fc;
     }
 
     .live-session-card, .live-content-panel {
+      overflow: hidden;
       border: 1px solid var(--live-line);
-      border-radius: 10px;
-      background: linear-gradient(145deg, #121d2b, #0b111b 70%);
-      box-shadow: 0 12px 32px rgba(0,0,0,.2);
+      border-radius: 16px;
+      background: #0b121d;
+      box-shadow: 0 16px 38px rgba(0,0,0,.3);
     }
 
-    .live-session-card { padding: 15px; }
-    .live-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    .live-kicker, .live-small-label { color:#91a2b9; font-size:8px; font-weight:900; letter-spacing:.15em; }
-    .live-session-card h1 { margin:7px 0 4px; font-size:clamp(21px,6vw,32px); line-height:1.04; letter-spacing:-.03em; }
-    .live-subtitle { color:#aab8ca; font-size:11px; }
+    .live-session-card {
+      position: relative;
+      padding: 18px;
+      background:
+        radial-gradient(ellipse at 92% 5%, rgba(32, 99, 164, .3), transparent 42%),
+        linear-gradient(135deg, #172639, #0c1420 72%);
+    }
+    .live-session-card::before {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 3px;
+      background: linear-gradient(#f2c94c, #e33248 62%, #1768ad);
+      content: "";
+    }
+    .live-title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .live-kicker, .live-small-label { color:#9aacc2; font-size:9px; font-weight:900; letter-spacing:.16em; }
+    .live-session-card h1 { margin:8px 0 5px; font-size:clamp(23px,7vw,34px); line-height:1.04; letter-spacing:-.035em; }
+    .live-subtitle { color:#b3c0d0; font-size:12px; }
     .live-state {
-      flex:none; padding:6px 8px; border:1px solid rgba(242,201,76,.45); border-radius:4px;
-      color:var(--live-gold); font-size:8px; font-weight:1000; letter-spacing:.12em;
+      display:inline-flex; flex:none; align-items:center; gap:6px; margin-top:2px; padding:7px 10px;
+      border:1px solid rgba(242,201,76,.35); border-radius:99px; color:#f2c94c;
+      font-size:9px; font-weight:1000; letter-spacing:.1em; background:rgba(8,14,23,.68);
     }
-    .live-state[data-live="true"] { border-color:rgba(255,66,79,.6); color:#ff6875; }
-    .live-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:15px; }
-    .live-metric { min-width:0; padding:9px; border:1px solid var(--live-line); border-radius:6px; background:#0a111b; }
-    .live-metric strong { display:block; margin-top:5px; overflow:hidden; color:#f6f8fc; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
-    .live-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:4px; margin:11px 0; }
+    .live-state::before { width:6px; height:6px; border-radius:50%; background:currentColor; content:""; }
+    .live-state[data-live="true"] { border-color:rgba(255,66,79,.5); color:#ff6875; }
+    .live-state[data-state="error"] { border-color:rgba(255,95,95,.45); color:#ff7f86; }
+    .live-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:18px; }
+    .live-metric { min-width:0; padding:10px; border:1px solid var(--live-line); border-radius:9px; background:rgba(7,13,22,.58); }
+    .live-metric strong { display:block; margin-top:6px; overflow:hidden; color:#f7f9fc; font-size:13px; text-overflow:ellipsis; white-space:nowrap; }
+    .live-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; margin:12px 0; padding:4px; border:1px solid var(--live-line); border-radius:11px; background:#0b121d; }
     .live-tabs button {
-      min-width:0; min-height:38px; padding:4px 2px; border:0; border-bottom:2px solid transparent;
-      color:#8fa1b8; font-size:8px; font-weight:1000; letter-spacing:.08em; background:transparent;
+      min-width:0; min-height:38px; padding:4px 2px; border:0; border-radius:8px;
+      color:#93a4ba; font-size:8px; font-weight:1000; letter-spacing:.07em; background:transparent;
     }
-    .live-tabs button[aria-selected="true"] { border-bottom-color:var(--live-gold); color:#fff; }
-    .live-content-panel { min-height:280px; overflow:hidden; background:var(--live-panel-2); }
-    .live-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:13px 12px; border-bottom:1px solid var(--live-line); }
+    .live-tabs button[aria-selected="true"] { color:#fff; background:linear-gradient(135deg,rgba(33,91,143,.62),rgba(22,39,58,.92)); box-shadow:inset 0 0 0 1px rgba(116,164,207,.18); }
+    .live-content-panel { min-height:280px; background:var(--live-panel-2); }
+    .live-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:14px; border-bottom:1px solid var(--live-line); }
     .live-panel-heading strong { font-size:10px; letter-spacing:.12em; }
-    .live-panel-heading span { color:#9aabc0; font-size:8px; }
+    .live-panel-heading span { color:#9aabc0; font-size:8px; text-align:right; }
     .live-table-scroll { overflow-x:auto; }
-    .live-table { width:100%; min-width:590px; border-collapse:collapse; font-size:10px; }
+    .live-table { width:100%; min-width:0; border-collapse:collapse; font-size:10px; }
     .live-table th { padding:10px 7px; color:#8799b0; font-size:8px; letter-spacing:.1em; text-align:left; background:#111c2a; }
-    .live-table td { height:43px; padding:5px 7px; border-top:1px solid rgba(132,160,194,.11); white-space:nowrap; }
+    .live-table td { height:53px; padding:6px 7px; border-top:1px solid rgba(132,160,194,.11); white-space:nowrap; }
     .live-table tr.leader { background:linear-gradient(90deg,rgba(242,201,76,.12),transparent 80%); }
-    .live-position { width:26px; color:var(--live-gold); font-weight:1000; }
-    .live-driver { display:flex; align-items:center; gap:7px; font-weight:1000; }
-    .team-stripe { width:3px; height:23px; border-radius:3px; background:var(--team-color,#8292a8); }
-    .live-team { max-width:110px; overflow:hidden; color:#aab8ca; text-overflow:ellipsis; }
+    .live-position { width:30px; color:var(--live-gold); font-size:12px; font-weight:1000; }
+    .live-driver { display:flex; align-items:center; gap:8px; font-weight:1000; }
+    .live-driver-copy { display:grid; gap:3px; }
+    .live-driver-copy strong { font-size:10px; }
+    .live-driver-copy small { max-width:110px; overflow:hidden; color:#93a4ba; font-size:8px; font-weight:500; text-overflow:ellipsis; }
+    .team-stripe { width:3px; height:26px; border-radius:3px; background:var(--team-color,#8292a8); }
     .live-gap { color:#e4ebf4; font-variant-numeric:tabular-nums; }
     .tyre-chip { display:inline-grid; width:24px; height:24px; place-items:center; border:1px solid currentColor; border-radius:50%; font-size:9px; font-weight:1000; }
     .tyre-soft { color:#ff5564; } .tyre-medium { color:#f2c94c; } .tyre-hard { color:#e7edf5; }
     .tyre-intermediate { color:#48d6a0; } .tyre-wet { color:#47a5ff; } .tyre-unknown { color:#8595a8; }
-    .live-empty { padding:24px 15px; color:#aab8ca; font-size:11px; line-height:1.6; text-align:center; }
-    .live-event { display:grid; grid-template-columns:48px 1fr; gap:10px; padding:11px 12px; border-bottom:1px solid var(--live-line); }
+    .live-empty { padding:26px 18px; color:#aab8ca; font-size:12px; line-height:1.6; text-align:center; }
+    .live-event { display:grid; grid-template-columns:52px 1fr; gap:11px; padding:13px 14px; border-bottom:1px solid var(--live-line); }
     .live-event time { color:var(--live-gold); font-size:9px; font-variant-numeric:tabular-nums; }
-    .live-event div { color:#e4ebf4; font-size:10px; line-height:1.45; }
-    .live-event small { display:block; margin-top:3px; color:#91a2b9; font-size:8px; }
+    .live-event div { color:#e4ebf4; font-size:11px; line-height:1.45; }
+    .live-event small { display:block; margin-top:4px; color:#91a2b9; font-size:9px; }
     .live-map-wrap { padding:12px; }
     .live-map { display:block; width:100%; height:230px; overflow:visible; touch-action:pan-y; }
     .live-map path.track-glow { fill:none; stroke:#2b8be0; stroke-width:11; opacity:.2; }
     .live-map path.track-line { fill:none; stroke:#a8d7ff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
     .live-map circle.car-dot { stroke:#fff; stroke-width:1.5; }
+    .live-map g.tracked-dot { cursor: pointer; }
+    .live-map circle.tracked-dot-core { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 14px currentColor); }
+    .live-map circle.tracked-dot-halo { opacity: .22; }
+    .live-map text.tracked-dot-label {
+      fill: #fff; font-size: 11px; font-weight: 900; letter-spacing: .06em;
+      paint-order: stroke; stroke: rgba(5,9,19,.85); stroke-width: 3px;
+      pointer-events: none;
+    }
+    .map-playback-bar { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+    .map-playback-bar button {
+      min-height: 30px; padding: 0 11px; border: 1px solid rgba(71,165,255,.35);
+      border-radius: 6px; color: var(--blue); font-size: 9px; font-weight: 900;
+      letter-spacing: .1em; background: rgba(11,25,43,.8); cursor: pointer;
+    }
+    .map-playback-bar button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .map-playback-status { color: #8fa4bf; font-size: 8px; font-weight: 800; letter-spacing: .09em; }
+    .live-map circle.car-dot.is-selected {
+      stroke-width:3; filter:drop-shadow(0 0 5px #fff);
+      animation: car-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes car-pulse { 50% { r:11; opacity:.72; } }
+    .map-driver-detail {
+      display:flex; align-items:center; gap:9px; margin-top:12px; padding:10px 12px;
+      border:1px solid var(--live-line); border-radius:9px; background:#101927;
+    }
+    .map-driver-color { width:4px; height:30px; border-radius:4px; background:var(--team-color); }
+    .map-driver-copy { display:grid; gap:3px; min-width:0; }
+    .map-driver-copy strong { color:#f1f5fa; font-size:11px; }
+    .map-driver-copy span { color:#91a2b9; font-size:9px; }
+    .map-video-link {
+      margin-left:auto; padding:8px 10px; border:1px solid rgba(242,201,76,.38);
+      border-radius:7px; color:#f2c94c; font-size:8px; font-weight:1000;
+      letter-spacing:.06em; text-decoration:none; white-space:nowrap;
+      background:rgba(85,67,21,.14);
+    }
+    .map-video-note { margin:8px 2px 0; color:#91a2b9; font-size:9px; line-height:1.5; }
     .map-legend { display:flex; flex-wrap:wrap; gap:7px 12px; margin-top:11px; }
     .map-legend span { display:flex; align-items:center; gap:5px; color:#c1ccda; font-size:8px; }
     .map-legend i { width:7px; height:7px; border-radius:50%; background:var(--team-color); }
@@ -221,9 +277,114 @@
     .radio-card-top { display:flex; justify-content:space-between; gap:8px; color:#f1f5fa; font-size:10px; font-weight:900; }
     .radio-card time { color:#9aabc0; font-size:9px; font-weight:500; }
     .radio-card audio { width:100%; height:34px; margin-top:9px; }
-    .live-cache-note { margin:8px 2px 0; color:#8fa1b8; font-size:8px; text-align:right; }
-    .live-next-link { display:block; margin-top:10px; padding:11px; border:1px solid var(--live-line); border-radius:7px; color:#f2c94c; font-size:10px; font-weight:900; text-align:center; background:#0c1420; }
-    #liveScreen[hidden], #homeScreen[hidden] { display:none !important; }
+    .live-cache-note { min-height:14px; margin:9px 2px 0; color:#8fa1b8; font-size:9px; text-align:right; }
+    .live-next-link { display:block; margin-top:10px; padding:12px; border:1px solid var(--live-line); border-radius:9px; color:#f2c94c; font-size:10px; font-weight:900; text-align:center; background:#0c1420; }
+    #liveScreen[hidden], #homeScreen[hidden], #watchScreen[hidden] { display:none !important; }
+
+    .watch-shell { margin-top: 12px; }
+    .watch-hero { padding: 4px 2px 14px; }
+    .watch-hero h1 { margin: 8px 0 6px; max-width: none; font-size: clamp(22px, 6vw, 34px); }
+    .watch-sub { color: #8fa4bf; font-size: 10px; line-height: 1.5; }
+    .watch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+    .watch-card {
+      display: flex; flex-direction: column; gap: 7px;
+      min-height: 138px; padding: 14px;
+      border: 1px solid var(--line); border-radius: 12px;
+      color: var(--ink); text-decoration: none;
+      background: linear-gradient(140deg, rgba(15,26,43,.96), rgba(7,14,25,.97));
+      box-shadow: 0 10px 26px rgba(0,0,0,.22);
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .watch-card:hover { transform: translateY(-2px); border-color: rgba(71,165,255,.45); }
+    .watch-card--primary { border-color: rgba(242,201,76,.4); }
+    .watch-tag {
+      align-self: flex-start; padding: 3px 7px; border-radius: 999px;
+      color: var(--gold); font-size: 7px; font-weight: 1000; letter-spacing: .13em;
+      border: 1px solid rgba(242,201,76,.35); background: rgba(85,67,21,.16);
+    }
+    .watch-card strong { font-size: 13px; letter-spacing: -.01em; }
+    .watch-desc { color: #9db0c8; font-size: 9px; line-height: 1.55; }
+    .watch-link { margin-top: auto; color: var(--blue); font-size: 9px; font-weight: 900; letter-spacing: .08em; }
+    .watch-note {
+      margin-top: 12px; padding: 11px 12px;
+      border: 1px solid rgba(242,201,76,.28); border-left: 3px solid var(--gold);
+      border-radius: 8px; color: #cdb97a; font-size: 9px; line-height: 1.6;
+      background: rgba(85,67,21,.1);
+    }
+    .watch-note strong { color: #f5d774; }
+
+    .watch-section-title {
+      margin: 16px 2px 8px; color: #8fa4bf;
+      font-size: 8px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase;
+    }
+    .watch-grid--grey .watch-card { opacity: .88; }
+    .watch-card--grey { border-color: rgba(143,164,191,.22); }
+    .watch-card--grey .watch-tag { color: #9aa9bd; border-color: rgba(143,164,191,.3); background: rgba(143,164,191,.08); }
+    .watch-card--grey .watch-link { color: #9aa9bd; }
+    .watch-card--static { cursor: default; }
+    .watch-card--static:hover { transform: none; border-color: rgba(143,164,191,.22); }
+
+    .watch-ai {
+      margin: 4px 0 6px; padding: 14px; overflow: hidden;
+      border: 1px solid rgba(71,165,255,.35); border-radius: 14px;
+      background: linear-gradient(135deg, rgba(20,42,74,.9), rgba(10,20,38,.95));
+      box-shadow: 0 14px 36px rgba(0,0,0,.28);
+    }
+    .watch-ai-head { display: flex; align-items: center; gap: 8px; }
+    .watch-ai-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #42d99a;
+      box-shadow: 0 0 10px rgba(66,217,154,.8);
+      animation: ai-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes ai-pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.45;transform:scale(.8);} }
+    .watch-ai-dot[data-busy="true"] { background: var(--gold); box-shadow: 0 0 10px rgba(242,201,76,.8); }
+    .watch-ai-title { color: #dce7f4; font-size: 10px; font-weight: 1000; letter-spacing: .16em; }
+    .watch-ai-status { margin-left: auto; color: #8fa4bf; font-size: 8px; font-weight: 800; letter-spacing: .08em; }
+    .watch-ai-query { margin-top: 11px; color: var(--gold); font-size: 11px; font-weight: 900; line-height: 1.4; }
+    .watch-ai-result { margin-top: 11px; display: grid; gap: 8px; }
+    .watch-ai-pick {
+      display: grid; grid-template-columns: 40px minmax(0,1fr) auto;
+      align-items: center; gap: 11px;
+      padding: 11px 12px;
+      border: 1px solid rgba(71,165,255,.3); border-radius: 10px;
+      color: var(--ink); text-decoration: none;
+      background: linear-gradient(120deg, rgba(16,29,48,.9), rgba(7,14,25,.85));
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .watch-ai-pick:hover { border-color: rgba(71,165,255,.7); transform: translateX(3px); }
+    .watch-ai-rank {
+      display: grid; width: 40px; height: 40px; place-items: center;
+      border-radius: 10px; font-size: 14px; font-weight: 1000; font-style: italic;
+      background: linear-gradient(145deg, rgba(71,165,255,.2), rgba(71,165,255,.05));
+      color: var(--blue); border: 1px solid rgba(71,165,255,.25);
+    }
+    .watch-ai-pick[data-price="free"] .watch-ai-rank { color: #42d99a; border-color: rgba(66,217,154,.3); background: linear-gradient(145deg, rgba(66,217,154,.15), rgba(66,217,154,.04)); }
+    .watch-ai-pick[data-price="paid"] .watch-ai-rank { color: var(--gold); border-color: rgba(242,201,76,.3); background: linear-gradient(145deg, rgba(242,201,76,.15), rgba(242,201,76,.04)); }
+    .watch-ai-pick[data-price="grey"] .watch-ai-rank { color: #9aa9bd; border-color: rgba(143,164,191,.25); background: linear-gradient(145deg, rgba(143,164,191,.12), rgba(143,164,191,.03)); }
+    .watch-ai-main { min-width: 0; }
+    .watch-ai-main strong { display: flex; align-items: center; gap: 6px; font-size: 12px; letter-spacing: -.01em; }
+    .watch-ai-host { color: #7a8ba3; font-size: 8px; font-weight: 700; letter-spacing: .06em; }
+    .watch-ai-main span { display: block; margin-top: 4px; color: #9db0c8; font-size: 9px; line-height: 1.5; }
+    .watch-ai-badge {
+      flex-shrink: 0; padding: 5px 9px; border-radius: 999px;
+      font-size: 7px; font-weight: 1000; letter-spacing: .12em; font-style: normal;
+      border: 1px solid rgba(66,217,154,.4); background: rgba(66,217,154,.1); color: #42d99a;
+    }
+    .watch-ai-pick[data-price="paid"] .watch-ai-badge { color: var(--gold); border-color: rgba(242,201,76,.4); background: rgba(85,67,21,.14); }
+    .watch-ai-pick[data-price="grey"] .watch-ai-badge { color: #9aa9bd; border-color: rgba(143,164,191,.3); background: rgba(143,164,191,.08); }
+    .watch-ai-best {
+      display: inline-block; margin-top: 5px; padding: 2px 6px;
+      border-radius: 3px; color: #06101c; font-size: 7px; font-weight: 1000;
+      letter-spacing: .1em; background: linear-gradient(90deg, #42d99a, #2fae7c);
+    }
+    .watch-ai-pick:first-child .watch-ai-best { display: inline-block; }
+    .watch-ai-pick:not(:first-child) .watch-ai-best { display: none; }
+    .watch-ai-log { margin-top: 11px; display: grid; gap: 4px; }
+    .watch-ai-log div {
+      color: #7a8ba3; font-size: 8px; font-family: Consolas, monospace; letter-spacing: .03em;
+    }
+    .watch-ai-log div::before { content: "▸ "; color: var(--blue); }
+    .watch-ai .nav-refresh { margin-top: 12px; }
 
     @media (min-width:650px) {
       .live-shell { max-width:980px; margin-right:auto; margin-left:auto; }
@@ -253,7 +414,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: center 38%;
+      object-position: center 43%;
       filter: brightness(.72) saturate(.95);
     }
 
@@ -291,6 +452,9 @@
       opacity: 0;
       transform: translateX(12px);
     }
+
+    .hero.has-archive-photo .hero-car,
+    .hero.has-archive-photo .hero-car-credit { display: none; }
 
     @keyframes photo-arrive {
       from { opacity: .4; }
@@ -608,22 +772,23 @@
 
     .map-panel {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 92px;
+      grid-template-columns: minmax(0, 1fr) 88px;
       align-items: center;
-      min-height: 128px;
-      padding: 15px;
+      min-height: 0;
+      padding: 8px 10px;
     }
 
     .track-map {
       display: grid;
       min-width: 0;
-      height: 96px;
+      height: 78px;
       place-items: center;
+      overflow: hidden;
     }
 
-    .track-map svg { width: 100%; height: 100%; overflow: visible; }
+    .track-map-image { display: block; width: 100%; height: 100%; object-fit: contain; }
 
-    .track-meta { padding-left: 9px; }
+    .track-meta { padding-left: 7px; }
     .track-label { color: var(--dim); font-size: 7px; font-weight: 900; letter-spacing: .15em; }
     .track-name { margin-top: 7px; color: #dbe5f1; font-size: 10px; font-weight: 800; line-height: 1.25; }
     .track-length { margin-top: 5px; color: #7f95b0; font-size: 8px; }
@@ -679,6 +844,68 @@
     }
     .error-line.visible { display: block; }
 
+    .nav-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      min-height: 34px;
+      padding: 0 13px;
+      border: 1px solid rgba(71, 165, 255, .25);
+      border-radius: 6px;
+      color: var(--blue);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      background: rgba(11, 19, 33, .78);
+      cursor: pointer;
+    }
+
+    .nav-refresh[data-busy="true"] { color: var(--dim); border-color: var(--line); pointer-events: none; }
+
+    .nav-refresh[data-busy="true"]::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border: 2px solid rgba(71, 165, 255, .25);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .season-progress { margin-top: 13px; max-width: 265px; }
+    .season-progress-top { display: flex; justify-content: space-between; color: #8fa4bf; font-size: 7px; font-weight: 900; letter-spacing: .15em; }
+    .season-progress-track { margin-top: 5px; height: 4px; border-radius: 999px; background: rgba(120, 151, 186, .16); overflow: hidden; }
+    .season-progress-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--red), var(--gold)); transition: width .6s ease; }
+
+    #tzToggle {
+      border: 0;
+      padding: 0;
+      color: #92a6c0;
+      font: inherit;
+      font-size: 7px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      background: transparent;
+      cursor: pointer;
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+    }
+
+    #tzToggle:focus-visible { outline: 1px solid var(--blue); }
+
+    .live-table td.fastest-lap { color: #b967ff; font-weight: 900; }
+
+    .section-nav button, .nav-refresh, .live-tabs button { transition: color .15s ease, border-color .15s ease, background .15s ease; }
+    .section-nav button:hover:not([aria-current="page"]) { color: var(--ink); border-color: rgba(115, 160, 207, .4); }
+    .live-table tbody tr { transition: background .15s ease; }
+    .live-table tbody tr:hover { background: rgba(71, 165, 255, .05); }
+    .session-row { transition: background .15s ease; }
+    .session-row:hover { background: rgba(71, 165, 255, .045); }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
     @media (min-width: 600px) {
       .shell { padding: 24px 24px 28px; }
       .hero { min-height: 320px; border-radius: 22px; }
@@ -687,8 +914,8 @@
       .hero-car { right: 18px; bottom: 17px; width: min(47%, 310px); height: 132px; }
       .hero-car-credit { right: 24px; bottom: 7px; }
       .main-grid { grid-template-columns: .9fr 1.1fr; gap: 14px; margin-top: 14px; }
-      .map-panel { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 145px; min-height: 156px; }
-      .track-map { height: 125px; }
+      .map-panel { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 145px; padding: 9px 13px; }
+      .track-map { height: 94px; }
       .session-panel, .schedule-panel { padding: 19px; }
       .session-row { min-height: 39px; }
     }
@@ -717,6 +944,8 @@
     <nav class="section-nav" aria-label="Main sections">
       <button type="button" data-screen="homeScreen" aria-current="page">HOME</button>
       <button type="button" data-screen="liveScreen" aria-current="false">LIVE TIMING</button>
+      <button type="button" data-screen="watchScreen" aria-current="false">WHERE TO WATCH</button>
+      <button type="button" id="refreshButton" class="nav-refresh" data-busy="false" aria-label="Refresh data">REFRESH</button>
     </nav>
 
     <section id="homeScreen">
@@ -730,6 +959,13 @@
         <div id="raceCountry" class="hero-country">Live schedule · no invented dates</div>
         <div id="raceCircuit" class="hero-circuit">Circuit data loads from the live calendar</div>
         <div id="raceDate" class="hero-date">DATE PENDING OFFICIAL FEED</div>
+        <div id="seasonProgressWrap" class="season-progress" hidden>
+          <div class="season-progress-top">
+            <span id="seasonRound">ROUND —</span>
+            <span id="seasonTotal">OF —</span>
+          </div>
+          <div class="season-progress-track"><div id="seasonProgressFill" class="season-progress-fill"></div></div>
+        </div>
         <span class="driver-number" aria-hidden="true">03</span>
       </div>
       <div class="helmet-wrap">
@@ -793,7 +1029,7 @@
           <div class="driver-meta">PRECISION · PACE · PERFORMANCE</div>
         </div>
       </div>
-      <div class="telemetry">DATA <span id="updatedAt">--</span><br>TIMEZONE <span>EUROPE/KYIV</span></div>
+      <div class="telemetry">DATA <span id="updatedAt">--</span><br>TIMEZONE <button id="tzToggle" type="button" aria-label="Switch timezone display">EUROPE/KYIV</button></div>
     </footer>
     <div class="source-line">
       Schedule: <a href="https://jolpi.ca/" rel="noreferrer">Jolpica</a> · Track geometry:
@@ -802,11 +1038,102 @@
     </div>
     </section>
 
+    <section id="watchScreen" class="watch-shell" hidden aria-label="Where to watch">
+      <div class="watch-hero">
+        <div class="live-kicker">F1 WATCH GUIDE · SEASON 2026 · УКРАЇНСЬКОЮ</div>
+        <h1>Where to watch F1</h1>
+        <div class="watch-sub">Смарт-пошук знаходить, де дивитись наступну сесію — платні, безкоштовні та альтернативні варіанти. Все перевіряється у реальному часі.</div>
+      </div>
+      <div class="watch-ai" id="watchAi">
+        <div class="watch-ai-head">
+          <span class="watch-ai-dot" id="watchAiDot" aria-hidden="true"></span>
+          <span class="watch-ai-title">WATCH SCOUT AI</span>
+          <span class="watch-ai-status" id="watchAiStatus">Ініціалізація…</span>
+        </div>
+        <div class="watch-ai-query" id="watchAiQuery">Аналізую календар…</div>
+        <div class="watch-ai-result" id="watchAiResult" hidden></div>
+        <div class="watch-ai-log" id="watchAiLog" aria-live="polite"></div>
+        <button type="button" id="watchAiRefresh" class="nav-refresh">ШУКАТИ ЗНОВУ</button>
+      </div>
+      <div class="watch-section-title">ПЛАТНІ · ОФІЦІЙНІ · НАДІЙНІ</div>
+      <div class="watch-grid">
+        <a class="watch-card watch-card--primary" href="https://f1tv.formula1.com/" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">ОФІЦІЙНЕ</span>
+          <strong>F1 TV Pro</strong>
+          <span class="watch-desc">Повна пряма трансляція всіх сесій — практики, кваліфікація, спринт і гонка. Платно, працює в усьому світі, повністю легально. <em>Коментар українською — Макс Подзігун.</em> 🎙️</span>
+          <span class="watch-link">f1tv.formula1.com →</span>
+        </a>
+        <a class="watch-card watch-card--primary" href="https://www.formula1.com/en/f1-live" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">ОФІЦІЙНЕ · БЕЗКОШТОВНО</span>
+          <strong>F1 Live Timing</strong>
+          <span class="watch-desc">Офіційна безкоштовна лайв-таблиця з телеметрією, колами та позиціями на трасі для кожної сесії, включно з FP1/FP2/FP3.</span>
+          <span class="watch-link">formula1.com/en/f1-live →</span>
+        </a>
+        <a class="watch-card" href="https://play.google.com/store/apps/details?hl=en_GB&id=com.softpauer.f1timingapp2014.basic" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">ОФІЦІЙНИЙ ДОДОТОК · БЕЗКОШТОВНО</span>
+          <strong>Офіційний застосунок F1</strong>
+          <span class="watch-desc">Безкоштовна таблиця лідерів з live timing, розкладом сесій та результатами у телефоні.</span>
+          <span class="watch-link">Google Play →</span>
+        </a>
+      </div>
+      <div class="watch-section-title">БЕЗКОШТОВНІ · ДЕРЖАВНІ МОВНИКИ · ГЕООБМЕЖЕНІ</div>
+      <div class="watch-grid watch-grid--free">
+        <a class="watch-card" href="https://www.rtbf.be/auvio" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">БЕЗКОШТОВНИЙ МОВНИК · БЕЛЬГІЯ</span>
+          <strong>RTBF Auvio</strong>
+          <span class="watch-desc">Державний мовник Бельгії. Транслює весь вік-енд — від практик до гонки. Потрібен безкоштовний акаунт, геообмежено до Бельгії.</span>
+          <span class="watch-link">rtbf.be/auvio →</span>
+        </a>
+        <a class="watch-card" href="https://on.orf.at/" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">БЕЗКОШТОВНИЙ МОВНИК · АВСТРІЯ</span>
+          <strong>ORF ON</strong>
+          <span class="watch-desc">Державний мовник Австрії, 14 етапів сезону. Безкоштовно, геообмежено до Австрії.</span>
+          <span class="watch-link">on.orf.at →</span>
+        </a>
+        <a class="watch-card" href="https://www.servustv.com/" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">БЕЗКОШТОВНИЙ МОВНИК · АВСТРІЯ</span>
+          <strong>ServusTV ON</strong>
+          <span class="watch-desc">Ділить права на F1 в Австрії з ORF — 11 етапів, включно з ГП Австрії. Безкоштовно, геообмежено.</span>
+          <span class="watch-link">servustv.com →</span>
+        </a>
+        <a class="watch-card" href="https://www.srf.ch/sport/formel-1" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">БЕЗКОШТОВНИЙ МОВНИК · ШВЕЙЦАРІЯ</span>
+          <strong>SRF (SRG SSR)</strong>
+          <span class="watch-desc">Державний мовник Швейцарії, покриває всі сесії наживо трьома мовами через SRF/RTS/RSI. Геообмежено до Швейцарії.</span>
+          <span class="watch-link">srf.ch →</span>
+        </a>
+      </div>
+      <div class="watch-section-title">АЛЬТЕРНАТИВНІ · СПОРИВНІ · КОРИСТУЙ ОБЕРЕЖНО</div>
+      <div class="watch-grid watch-grid--grey">
+        <a class="watch-card watch-card--grey" href="https://livetiming.formula1.com/" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">СІРИЙ СПИСОК · НЕПЕРЕВІРЕНО</span>
+          <strong>F1 Live Timing API</strong>
+          <span class="watch-desc">Технічний потік з офіційного сайту — дає дані без відео. Використовується багатьма фен-застосунками, але формально не є публічним API.</span>
+          <span class="watch-link">livetiming.formula1.com →</span>
+        </a>
+        <a class="watch-card watch-card--grey" href="https://f1tv.formula1.com/page/493/archive" target="_blank" rel="noreferrer noopener">
+          <span class="watch-tag">СІРИЙ СПИСОК · АРХІВ</span>
+          <strong>F1 TV Archive</strong>
+          <span class="watch-desc">Офіційний архів минулих гонок. Частково безкоштовний, але повний доступ потребує підписки. Не завжди актуальний для поточного сезону.</span>
+          <span class="watch-link">f1tv.formula1.com/archive →</span>
+        </a>
+        <div class="watch-card watch-card--grey watch-card--static">
+          <span class="watch-tag">СІРИЙ СПИСОК · TELEGRAM</span>
+          <strong>Telegram-канали фенів</strong>
+          <span class="watch-desc">Ми свідомо не даємо прямих посилань на піратські Telegram-канали — саме там найчастіше поширюють віруси та шахрайство. Шукай сам і перевіряй джерела.</span>
+          <span class="watch-link">⚠️ БЕЗ ПОСИЛАНЬ</span>
+        </div>
+      </div>
+      <div class="watch-note">
+        <strong>Безпека:</strong> зелений блок = 100% легально й перевірено. Сірий блок = користуйся на свій ризик — посилання дані лише для ознайомлення. Simply lovely. 🧡
+      </div>
+    </section>
+
     <section id="liveScreen" class="live-shell" hidden aria-label="Live timing">
       <div class="live-session-card">
         <div class="live-title-row">
           <div>
-            <div class="live-kicker">OPENF1 · SESSION CONTROL</div>
+            <div class="live-kicker">F1 LIVE FEED · SESSION CONTROL</div>
             <h1 id="liveGrandPrix">Loading session data</h1>
             <div id="liveCircuit" class="live-subtitle">Connecting to the official timing feed</div>
           </div>
@@ -825,7 +1152,7 @@
         <button type="button" data-live-tab="map" aria-selected="false">TRACK MAP</button>
       </nav>
       <div id="livePanel" class="live-content-panel" aria-live="polite">
-        <div class="live-empty">Loading OpenF1 session data…</div>
+        <div class="live-empty">Connecting to the free F1 live timing feed…</div>
       </div>
       <div id="liveCacheNote" class="live-cache-note"></div>
       <a id="liveNextGp" class="live-next-link" href="#" hidden>VIEW NEXT GRAND PRIX IN HOME →</a>
@@ -847,12 +1174,10 @@
         149: "sa-2021", 150: "qa-2004", 151: "us-2022", 152: "us-2023",
         153: "es-2026"
       };
-      const historicalVictoryPhotos = {
-        14: {
-          src: "sao-paulo-2019-verstappen-victory.jpg",
-          alt: "Max Verstappen celebrating his 2019 Brazilian Grand Prix victory on the São Paulo podium",
-          caption: "ARCHIVE · SÃO PAULO WIN · 2019"
-        }
+      const verstappenHeroPhoto = {
+        src: "sao-paulo-2019-verstappen-victory.jpg",
+        alt: "Max Verstappen on the podium after his 2019 Brazilian Grand Prix victory",
+        caption: "MAX VERSTAPPEN · ARCHIVE MOMENT · 2019"
       };
       const timeFormatter = new Intl.DateTimeFormat("uk-UA", {
         timeZone: KYIV, hour: "2-digit", minute: "2-digit", hourCycle: "h23"
@@ -1002,9 +1327,12 @@
           : `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
       }
 
-      function createTrackSvg(geoJson) {
-        const feature = geoJson.features && geoJson.features[0];
-        const coordinates = feature && feature.geometry && feature.geometry.coordinates;
+      function createTrackPng(geoJson) {
+        const feature = geoJson.features?.find((item) =>
+          item.geometry?.type === "LineString" || item.geometry?.type === "MultiLineString"
+        ) || geoJson.features?.[0];
+        let coordinates = feature?.geometry?.coordinates;
+        if (feature?.geometry?.type === "MultiLineString") coordinates = coordinates?.[0];
         if (!Array.isArray(coordinates) || coordinates.length < 3) {
           throw new Error("Circuit geometry is missing.");
         }
@@ -1017,59 +1345,48 @@
         const minX = Math.min(...xs), maxX = Math.max(...xs);
         const minY = Math.min(...ys), maxY = Math.max(...ys);
         const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
-        const width = 300, height = 170, padding = 18;
+        const width = 640, height = 260, padding = 28;
         const scale = Math.min((width - padding * 2) / spanX, (height - padding * 2) / spanY);
         const drawnWidth = spanX * scale, drawnHeight = spanY * scale;
         const offsetX = (width - drawnWidth) / 2, offsetY = (height - drawnHeight) / 2;
-        const mapped = points.map((point) => [
-          offsetX + (Number(point[0]) - minX) * scale,
-          height - offsetY - (Number(point[1]) - minY) * scale
-        ]);
-        const pathData = mapped.map((point, index) =>
-          `${index === 0 ? "M" : "L"}${point[0].toFixed(2)} ${point[1].toFixed(2)}`
-        ).join(" ") + " Z";
-        const namespace = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(namespace, "svg");
-        svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-        svg.setAttribute("role", "img");
-        svg.setAttribute("aria-label", "Real circuit layout");
-        const defs = document.createElementNS(namespace, "defs");
-        const filter = document.createElementNS(namespace, "filter");
-        filter.setAttribute("id", "trackGlow");
-        filter.setAttribute("x", "-50%"); filter.setAttribute("y", "-50%");
-        filter.setAttribute("width", "200%"); filter.setAttribute("height", "200%");
-        const blur = document.createElementNS(namespace, "feGaussianBlur");
-        blur.setAttribute("stdDeviation", "3.2");
-        blur.setAttribute("result", "blur");
-        filter.appendChild(blur);
-        defs.appendChild(filter);
-        svg.appendChild(defs);
-        const glow = document.createElementNS(namespace, "path");
-        glow.setAttribute("d", pathData);
-        glow.setAttribute("fill", "none");
-        glow.setAttribute("stroke", "#2c8ce4");
-        glow.setAttribute("stroke-width", "9");
-        glow.setAttribute("stroke-linejoin", "round");
-        glow.setAttribute("stroke-linecap", "round");
-        glow.setAttribute("filter", "url(#trackGlow)");
-        svg.appendChild(glow);
-        const line = document.createElementNS(namespace, "path");
-        line.setAttribute("d", pathData);
-        line.setAttribute("fill", "none");
-        line.setAttribute("stroke", "#91ceff");
-        line.setAttribute("stroke-width", "3");
-        line.setAttribute("stroke-linejoin", "round");
-        line.setAttribute("stroke-linecap", "round");
-        svg.appendChild(line);
-        const marker = document.createElementNS(namespace, "circle");
-        marker.setAttribute("cx", mapped[0][0].toFixed(2));
-        marker.setAttribute("cy", mapped[0][1].toFixed(2));
-        marker.setAttribute("r", "5");
-        marker.setAttribute("fill", "#fb4054");
-        marker.setAttribute("stroke", "#fff");
-        marker.setAttribute("stroke-width", "1.5");
-        svg.appendChild(marker);
-        return { svg, feature };
+        const mapped = points.map((point) => ({
+          x: offsetX + (Number(point[0]) - minX) * scale,
+          y: height - offsetY - (Number(point[1]) - minY) * scale
+        }));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("PNG renderer is unavailable.");
+        context.beginPath();
+        mapped.forEach((point, index) => {
+          if (index === 0) context.moveTo(point.x, point.y);
+          else context.lineTo(point.x, point.y);
+        });
+        context.closePath();
+        context.lineJoin = "round";
+        context.lineCap = "round";
+        context.strokeStyle = "#2c8ce4";
+        context.lineWidth = 13;
+        context.shadowColor = "rgba(44, 140, 228, .8)";
+        context.shadowBlur = 20;
+        context.stroke();
+        context.shadowBlur = 0;
+        context.strokeStyle = "#a8d7ff";
+        context.lineWidth = 5;
+        context.stroke();
+        context.beginPath();
+        context.arc(mapped[0].x, mapped[0].y, 8, 0, Math.PI * 2);
+        context.fillStyle = "#fb4054";
+        context.fill();
+        context.lineWidth = 3;
+        context.strokeStyle = "#fff";
+        context.stroke();
+        const image = document.createElement("img");
+        image.className = "track-map-image";
+        image.alt = "PNG map of the circuit layout";
+        image.src = canvas.toDataURL("image/png");
+        return { image, feature };
       }
 
       async function renderTrack(race) {
@@ -1089,8 +1406,8 @@
             if (!response.ok) throw new Error(`Track data returned HTTP ${response.status}.`);
             raw = await response.text();
           }
-          const result = createTrackSvg(JSON.parse(raw));
-          trackMap.replaceChildren(result.svg);
+          const result = createTrackPng(JSON.parse(raw));
+          trackMap.replaceChildren(result.image);
           const length = result.feature.properties && result.feature.properties.length;
           if (Number.isFinite(Number(length))) {
             $("trackLength").textContent = `${(Number(length) / 1000).toFixed(3)} KM · REAL LAYOUT`;
@@ -1113,7 +1430,7 @@
           activeSession = null;
           if (timerHandle) clearInterval(timerHandle);
           $("raceTitle").textContent = "NEXT GP PENDING";
-          setHistoricalVictoryPhoto(null);
+          setVerstappenHeroPhoto();
           $("raceCountry").textContent = "Next season date not published";
           $("raceCircuit").textContent = "No date has been assumed";
           $("raceDate").textContent = "WAITING FOR THE OFFICIAL CALENDAR";
@@ -1162,7 +1479,7 @@
         activeSession = current;
 
         $("raceTitle").textContent = `${race.location || race.country_name} GP`;
-        setHistoricalVictoryPhoto(race);
+        setVerstappenHeroPhoto();
         $("raceCountry").textContent = `${race.country_name || "Country"} · ${race.location || ""}`.trim();
         $("raceCircuit").textContent = race.circuit_short_name || "Circuit";
         $("raceDate").textContent = fullDateFormatter.format(new Date(raceEvent.startMs)).toUpperCase();
@@ -1199,24 +1516,18 @@
         timerHandle = window.setInterval(renderCountdown, 1000);
       }
 
-      function setHistoricalVictoryPhoto(race) {
-        const photo = historicalVictoryPhotos[Number(race?.circuit_key)];
+      function setVerstappenHeroPhoto() {
         const hero = document.querySelector(".hero");
         const image = $("heroPhoto");
         const shade = $("heroPhotoShade");
         const label = $("archiveLabel");
-        hero.classList.toggle("has-archive-photo", Boolean(photo));
-        image.hidden = !photo;
-        shade.hidden = !photo;
-        label.hidden = !photo;
-        if (photo) {
-          if (!image.src.endsWith(photo.src)) image.src = photo.src;
-          image.alt = photo.alt;
-          label.textContent = photo.caption;
-        } else {
-          image.removeAttribute("src");
-          image.alt = "";
-        }
+        hero.classList.add("has-archive-photo");
+        image.hidden = false;
+        shade.hidden = false;
+        label.hidden = false;
+        if (!image.src.endsWith(verstappenHeroPhoto.src)) image.src = verstappenHeroPhoto.src;
+        image.alt = verstappenHeroPhoto.alt;
+        label.textContent = verstappenHeroPhoto.caption;
       }
 
       async function refreshDashboard() {

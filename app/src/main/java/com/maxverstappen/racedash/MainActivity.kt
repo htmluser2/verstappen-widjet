@@ -15,10 +15,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.webkit.WebViewAssetLoader
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class MainActivity : Activity() {
     private lateinit var dashboard: WebView
+    private lateinit var liveFeed: F1LiveFeedClient
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +39,32 @@ class MainActivity : Activity() {
             allowContentAccess = false
             mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
-        dashboard.addJavascriptInterface(DashboardBridge(applicationContext), "AndroidF1")
+        liveFeed = F1LiveFeedClient(
+            onStatus = { status ->
+                runOnUiThread {
+                    if (::dashboard.isInitialized && !isDestroyed) {
+                        dashboard.evaluateJavascript(
+                            "window.onF1FeedStatus?.(${JSONObject.quote(status)})",
+                            null
+                        )
+                    }
+                }
+            },
+            onMessage = { topic, payload ->
+                runOnUiThread {
+                    if (::dashboard.isInitialized && !isDestroyed) {
+                        dashboard.evaluateJavascript(
+                            "window.onF1FeedMessage?.(${JSONObject.quote(topic)},${JSONObject.quote(payload)})",
+                            null
+                        )
+                    }
+                }
+            }
+        )
+        dashboard.addJavascriptInterface(
+            DashboardBridge(applicationContext, liveFeed),
+            "AndroidF1"
+        )
         dashboard.webViewClient = object : WebViewClient() {
             override fun shouldInterceptRequest(
                 view: WebView?,
@@ -61,15 +88,7 @@ class MainActivity : Activity() {
         }
         dashboard.loadUrl("https://appassets.androidplatform.net/assets/index.html")
 
-        val periodicRefresh = PeriodicWorkRequestBuilder<CalendarRefreshWorker>(
-            6,
-            TimeUnit.HOURS
-        ).build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            CalendarRefreshWorker.PERIODIC_WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
-            periodicRefresh
-        )
+        schedulePeriodicCalendarRefresh(this)
         requestCalendarRefresh()
     }
 
@@ -82,6 +101,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         if (::dashboard.isInitialized) {
+            liveFeed.stop()
             dashboard.removeJavascriptInterface("AndroidF1")
             dashboard.destroy()
         }
@@ -89,6 +109,18 @@ class MainActivity : Activity() {
     }
 
     companion object {
+        internal fun schedulePeriodicCalendarRefresh(context: android.content.Context) {
+            val periodicRefresh = PeriodicWorkRequestBuilder<CalendarRefreshWorker>(
+                15,
+                TimeUnit.MINUTES
+            ).build()
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                CalendarRefreshWorker.PERIODIC_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                periodicRefresh
+            )
+        }
+
         internal fun requestCalendarRefresh(context: android.content.Context) {
             val request = OneTimeWorkRequestBuilder<CalendarRefreshWorker>().build()
             WorkManager.getInstance(context).enqueueUniqueWork(
@@ -102,7 +134,10 @@ class MainActivity : Activity() {
     private fun requestCalendarRefresh() = requestCalendarRefresh(this)
 }
 
-class DashboardBridge(private val context: android.content.Context) {
+class DashboardBridge(
+    private val context: android.content.Context,
+    private val liveFeed: F1LiveFeedClient
+) {
     @JavascriptInterface
     fun getSchedule(): String = context
         .getSharedPreferences(CalendarRefreshWorker.PREFERENCES, Activity.MODE_PRIVATE)
@@ -138,5 +173,15 @@ class DashboardBridge(private val context: android.content.Context) {
     @JavascriptInterface
     fun refresh() {
         MainActivity.requestCalendarRefresh(context)
+    }
+
+    @JavascriptInterface
+    fun startLiveFeed() {
+        liveFeed.start()
+    }
+
+    @JavascriptInterface
+    fun stopLiveFeed() {
+        liveFeed.stop()
     }
 }

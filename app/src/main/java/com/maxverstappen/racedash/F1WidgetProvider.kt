@@ -27,6 +27,7 @@ abstract class F1WidgetProvider : AppWidgetProvider() {
         appWidgetIds: IntArray
     ) {
         appWidgetIds.forEach { renderWidget(context, manager, it, widgetLayout) }
+        MainActivity.schedulePeriodicCalendarRefresh(context)
         MainActivity.requestCalendarRefresh(context)
     }
 
@@ -42,11 +43,26 @@ abstract class F1WidgetProvider : AppWidgetProvider() {
     companion object {
         private val kyivZone = ZoneId.of("Europe/Kyiv")
         private val dayStamp = DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("uk-UA"))
+        private val scheduleDay = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.forLanguageTag("uk-UA"))
         private const val SAO_PAULO_CIRCUIT_KEY = 14
+        private data class ScheduleRow(
+            val container: Int,
+            val day: Int,
+            val session: Int,
+            val time: Int
+        )
+        private val scheduleRows = listOf(
+            ScheduleRow(R.id.widget_schedule_row_1, R.id.widget_schedule_day_1, R.id.widget_schedule_session_1, R.id.widget_schedule_time_1),
+            ScheduleRow(R.id.widget_schedule_row_2, R.id.widget_schedule_day_2, R.id.widget_schedule_session_2, R.id.widget_schedule_time_2),
+            ScheduleRow(R.id.widget_schedule_row_3, R.id.widget_schedule_day_3, R.id.widget_schedule_session_3, R.id.widget_schedule_time_3),
+            ScheduleRow(R.id.widget_schedule_row_4, R.id.widget_schedule_day_4, R.id.widget_schedule_session_4, R.id.widget_schedule_time_4),
+            ScheduleRow(R.id.widget_schedule_row_5, R.id.widget_schedule_day_5, R.id.widget_schedule_session_5, R.id.widget_schedule_time_5)
+        )
         private val widgetProviders = listOf(
             CompactF1WidgetProvider::class.java to R.layout.widget_small,
             WideF1WidgetProvider::class.java to R.layout.widget_wide,
-            LargeF1WidgetProvider::class.java to R.layout.widget_large
+            LargeF1WidgetProvider::class.java to R.layout.widget_large,
+            WeekendScheduleWidgetProvider::class.java to R.layout.widget_schedule
         )
 
         fun refreshAll(context: Context) {
@@ -118,6 +134,13 @@ abstract class F1WidgetProvider : AppWidgetProvider() {
                     R.id.widget_schedule,
                     if (hasCalendar) "Waiting for the next published calendar" else "Waiting for the race calendar"
                 )
+                if (layoutId == R.layout.widget_small) {
+                    views.setViewVisibility(R.id.widget_circuit, View.GONE)
+                    views.setViewVisibility(R.id.widget_updated, View.GONE)
+                }
+                if (layoutId == R.layout.widget_schedule) {
+                    renderWeekendSchedule(views, emptyList(), now)
+                }
             } else {
                 val weekend = RaceCalendar.weekendSessions(sessions, race)
                 val target = RaceCalendar.nearestSession(weekend, now)
@@ -179,10 +202,17 @@ abstract class F1WidgetProvider : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_countdown, RaceCalendar.kyivTime(race.start))
                 }
 
-                val scheduleText = weekend.joinToString("   ·   ") {
-                    "${RaceCalendar.sessionCode(it.sessionName)}  ${RaceCalendar.kyivTime(it.start)}"
-                }
+                val minimumHeight = manager.getAppWidgetOptions(widgetId)
+                    .getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT)
+                val scheduleText = formatWeekendSchedule(weekend, now, layoutId, minimumHeight)
                 views.setTextViewText(R.id.widget_schedule, scheduleText)
+                if (layoutId == R.layout.widget_small) {
+                    views.setViewVisibility(R.id.widget_circuit, View.GONE)
+                    views.setViewVisibility(R.id.widget_updated, View.GONE)
+                }
+                if (layoutId == R.layout.widget_schedule) {
+                    renderWeekendSchedule(views, weekend, now)
+                }
                 val track = preferences.getString(
                     CalendarRefreshWorker.trackKey(race.circuitKey),
                     null
@@ -196,6 +226,72 @@ abstract class F1WidgetProvider : AppWidgetProvider() {
                 }
             }
             manager.updateAppWidget(widgetId, views)
+        }
+
+        private fun formatWeekendSchedule(
+            weekend: List<F1Session>,
+            now: Instant,
+            layoutId: Int,
+            widgetHeight: Int
+        ): String {
+            val upcoming = weekend.filter { RaceCalendar.status(it, now) != "FINISHED" }
+            val sessions = when (layoutId) {
+                R.layout.widget_small -> (if (upcoming.isEmpty()) weekend.takeLast(2) else upcoming.take(2))
+                R.layout.widget_wide -> {
+                    val visibleCount = if (widgetHeight >= 150) 5 else 2
+                    (if (upcoming.isEmpty()) weekend.takeLast(visibleCount) else upcoming.take(visibleCount))
+                }
+                else -> weekend
+            }
+            val entries = sessions.map { session ->
+                val day = scheduleDay.format(session.start.atZone(kyivZone))
+                    .uppercase(Locale.forLanguageTag("uk-UA"))
+                if (layoutId == R.layout.widget_small) {
+                    "$day  ·  ${RaceCalendar.sessionCode(session.sessionName)}  ${RaceCalendar.kyivTime(session.start)}"
+                } else {
+                    "$day   ·   ${RaceCalendar.localizedSessionName(session.sessionName)}   ·   ${RaceCalendar.kyivTime(session.start)}"
+                }
+            }
+            return entries.joinToString("\n")
+        }
+
+        private fun renderWeekendSchedule(
+            views: RemoteViews,
+            weekend: List<F1Session>,
+            now: Instant
+        ) {
+            val selected = weekend.firstOrNull { RaceCalendar.status(it, now) != "FINISHED" }
+            scheduleRows.forEachIndexed { index, row ->
+                val session = weekend.getOrNull(index)
+                if (session == null) {
+                    views.setViewVisibility(row.container, View.GONE)
+                    return@forEachIndexed
+                }
+                views.setViewVisibility(row.container, View.VISIBLE)
+                val status = RaceCalendar.status(session, now)
+                val isHighlighted = session == selected
+                val sessionColor = when {
+                    status == "LIVE" -> Color.rgb(255, 104, 120)
+                    isHighlighted -> Color.rgb(242, 201, 76)
+                    status == "FINISHED" -> Color.rgb(112, 128, 148)
+                    else -> Color.rgb(231, 238, 248)
+                }
+                views.setTextViewText(
+                    row.day,
+                    scheduleDay.format(session.start.atZone(kyivZone)).uppercase(Locale.forLanguageTag("uk-UA"))
+                )
+                views.setTextViewText(row.session, RaceCalendar.localizedSessionName(session.sessionName).uppercase(Locale.forLanguageTag("uk-UA")))
+                views.setTextViewText(row.time, RaceCalendar.kyivTime(session.start))
+                views.setTextColor(row.day, if (isHighlighted) sessionColor else Color.rgb(139, 158, 182))
+                views.setTextColor(row.session, sessionColor)
+                views.setTextColor(row.time, sessionColor)
+                views.setInt(
+                    row.container,
+                    "setBackgroundResource",
+                    if (isHighlighted) R.drawable.widget_schedule_row_active else R.drawable.widget_schedule_row
+                )
+            }
+            selected?.let { views.setTextViewText(R.id.widget_countdown, RaceCalendar.kyivTime(it.start)) }
         }
 
         private fun formatCountdown(duration: Duration): String {
@@ -222,4 +318,8 @@ class WideF1WidgetProvider : F1WidgetProvider() {
 
 class LargeF1WidgetProvider : F1WidgetProvider() {
     override val widgetLayout: Int = R.layout.widget_large
+}
+
+class WeekendScheduleWidgetProvider : F1WidgetProvider() {
+    override val widgetLayout: Int = R.layout.widget_schedule
 }
