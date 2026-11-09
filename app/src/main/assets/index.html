@@ -128,28 +128,124 @@
     .connection.offline .connection-dot { background: var(--gold); box-shadow: 0 0 10px rgba(242,201,76,.8); }
 
     .section-nav {
+      position: fixed;
+      z-index: 40;
+      left: 0; right: 0; bottom: 0;
       display: flex;
-      gap: 7px;
-      padding: 12px 0 2px;
+      justify-content: space-around;
+      gap: 4px;
+      padding: 8px max(10px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--line);
+      background: rgba(7, 11, 19, .96);
+      backdrop-filter: blur(14px);
     }
 
     .section-nav button {
-      min-height: 34px;
-      padding: 0 13px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
+      flex: 1;
+      max-width: 132px;
+      min-height: 46px;
+      padding: 6px 6px;
+      border: 1px solid transparent;
+      border-radius: 10px;
       color: var(--muted);
       font-size: 9px;
       font-weight: 900;
       letter-spacing: .12em;
-      background: rgba(11, 19, 33, .78);
+      background: transparent;
     }
 
-    .section-nav button[aria-current="page"] {
-      border-color: rgba(242, 201, 76, .55);
-      color: #080b11;
-      background: var(--gold);
+    .section-nav button::before {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 13px;
+      line-height: 1;
     }
+    .section-nav button[data-screen="homeScreen"]::before { content: "\2302"; }
+    .section-nav button[data-screen="liveScreen"]::before { content: "\25CF"; }
+    .section-nav button[data-screen="watchScreen"]::before { content: "\25B6"; }
+    .section-nav button[data-screen="resultsScreen"]::before { content: "\2261"; }
+
+    .section-nav button[aria-current="page"] {
+      border-color: rgba(242, 201, 76, .4);
+      color: var(--gold);
+      background: rgba(85, 67, 21, .18);
+    }
+
+    .shell { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+
+    .splash {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(251,64,84,.14), transparent 55%),
+        #050913;
+      transition: opacity .35s ease;
+    }
+    .splash.done { opacity: 0; pointer-events: none; }
+    .splash-inner { text-align: center; }
+    .splash-mark {
+      width: 74px; height: 68px; margin: 0 auto;
+      display: grid; place-items: center;
+      color: #06101c; font-size: 34px; font-weight: 1000; font-style: italic;
+      transform: skew(-12deg);
+      background: linear-gradient(145deg, #f8d55d 0 22%, #fb4054 23% 69%, #176fb7 70%);
+      clip-path: polygon(12% 0, 100% 0, 83% 100%, 0 100%);
+      box-shadow: 0 0 40px rgba(251,64,84,.35);
+      animation: splash-in .55s cubic-bezier(.2,.9,.25,1) both;
+    }
+    .splash-strip {
+      height: 3px; width: 0; margin: 18px auto 0;
+      background: linear-gradient(90deg, transparent, var(--red), var(--gold), transparent);
+      box-shadow: 0 0 14px rgba(251,64,84,.7);
+      animation: splash-strip .7s .25s ease-out both;
+    }
+    .splash-car {
+      position: relative;
+      width: 120px; height: 14px; margin: 16px auto 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, #dfe9f6 18%, #8fb4e6 70%, transparent);
+      filter: drop-shadow(0 0 10px rgba(143,180,230,.8));
+      animation: splash-drive .85s .55s cubic-bezier(.15,.75,.2,1) both;
+      transform-origin: left center;
+    }
+    .splash-car::after {
+      content: "";
+      position: absolute; inset: 0 -60px;
+      background: linear-gradient(90deg, transparent, rgba(143,180,230,.5), transparent);
+      filter: blur(6px);
+    }
+    .splash-title {
+      margin-top: 20px;
+      color: #dfe9f6; font-size: 11px; font-weight: 1000; letter-spacing: .34em;
+      animation: splash-in .5s .35s ease-out both;
+    }
+    .splash-skip { margin-top: 26px; color: #536882; font-size: 8px; font-weight: 800; letter-spacing: .2em; }
+    @keyframes splash-in { from { opacity: 0; transform: translateY(10px) skew(-12deg); } to { opacity: 1; transform: translateY(0) skew(-12deg); } }
+    @keyframes splash-strip { from { width: 0; } to { width: 150px; } }
+    @keyframes splash-drive {
+      from { transform: translateX(-70%) scaleX(.4); opacity: 0; }
+      35% { opacity: 1; }
+      to { transform: translateX(120%) scaleX(1.15); opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .splash-mark, .splash-strip, .splash-car, .splash-title { animation: none !important; }
+      .splash-car { opacity: 0; }
+      .splash-strip { width: 150px; }
+    }
+
+    .skeleton {
+      border-radius: 8px;
+      background: linear-gradient(100deg, rgba(120,151,186,.08) 40%, rgba(120,151,186,.2) 50%, rgba(120,151,186,.08) 60%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+      color: transparent !important;
+      min-height: 34px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; background: rgba(120,151,186,.12); } }
 
     .live-shell {
       --live-panel: #101927;
@@ -279,7 +375,7 @@
     .radio-card audio { width:100%; height:34px; margin-top:9px; }
     .live-cache-note { min-height:14px; margin:9px 2px 0; color:#8fa1b8; font-size:9px; text-align:right; }
     .live-next-link { display:block; margin-top:10px; padding:12px; border:1px solid var(--live-line); border-radius:9px; color:#f2c94c; font-size:10px; font-weight:900; text-align:center; background:#0c1420; }
-    #liveScreen[hidden], #homeScreen[hidden], #watchScreen[hidden] { display:none !important; }
+    #liveScreen[hidden], #homeScreen[hidden], #watchScreen[hidden], #resultsScreen[hidden] { display:none !important; }
 
     .watch-shell { margin-top: 12px; }
     .watch-hero { padding: 4px 2px 14px; }
@@ -385,6 +481,101 @@
     }
     .watch-ai-log div::before { content: "▸ "; color: var(--blue); }
     .watch-ai .nav-refresh { margin-top: 12px; }
+
+    .victory-gallery {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px;
+    }
+    .victory-card {
+      position: relative; overflow: hidden; border-radius: 12px;
+      aspect-ratio: 4/5; border: 1px solid var(--line);
+      background: #0a111b; cursor: default;
+    }
+    .victory-card img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; filter: brightness(.92) saturate(1.05);
+      transition: transform .3s ease;
+    }
+    .victory-card:hover img { transform: scale(1.06); }
+    .victory-card::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 45%, rgba(5,9,19,.92) 100%);
+    }
+    .victory-copy {
+      position: absolute; left: 10px; right: 10px; bottom: 9px; z-index: 2;
+    }
+    .victory-copy strong {
+      display: block; color: #fff; font-size: 11px; font-weight: 1000; letter-spacing: .02em;
+      text-shadow: 0 1px 6px rgba(5,9,19,.9);
+    }
+    .victory-copy span {
+      display: block; margin-top: 2px; color: #b7c6d9; font-size: 8px; font-weight: 800;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .victory-badge {
+      position: absolute; top: 8px; left: 8px; z-index: 2;
+      padding: 3px 7px; border-radius: 999px;
+      color: #06101c; font-size: 7px; font-weight: 1000; letter-spacing: .1em;
+      background: linear-gradient(90deg, var(--gold), #d7ae3c);
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    }
+    .victory-badge--era { background: linear-gradient(90deg, var(--blue), #2b7fd0); color: #fff; }
+    .victory-note {
+      margin-top: 10px; color: #71859f; font-size: 8px; line-height: 1.6;
+    }
+    .victory-note a { color: #9db0c8; text-decoration: none; }
+    .victory-card.is-next { border-color: rgba(242,201,76,.65); box-shadow: 0 0 0 1px rgba(242,201,76,.35), 0 10px 26px rgba(0,0,0,.35); }
+    .victory-card.is-next::before {
+      content: "NEXT GP"; position: absolute; top: 8px; right: 8px; z-index: 3;
+      padding: 3px 7px; border-radius: 999px;
+      color: #06101c; font-size: 7px; font-weight: 1000; letter-spacing: .12em;
+      background: linear-gradient(90deg, var(--red), #c73a48);
+    }
+    .victory-note a:focus-visible { outline: 1px solid var(--blue); }
+
+    .results-picker { display: grid; grid-template-columns: 1fr 96px; gap: 8px; margin-bottom: 10px; }
+    .picker-field { display: grid; gap: 5px; }
+    .picker-field span { color: #8fa4bf; font-size: 7px; font-weight: 900; letter-spacing: .16em; }
+    .picker-field select {
+      min-height: 44px; padding: 0 10px;
+      border: 1px solid var(--line); border-radius: 8px;
+      color: var(--ink); font: inherit; font-size: 12px; font-weight: 800;
+      background: rgba(11,19,33,.9);
+    }
+    .picker-field select:disabled { opacity: .5; }
+    .picker-field select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+    .results-summary {
+      display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px;
+      margin-bottom: 10px;
+    }
+    .results-summary .cell {
+      padding: 10px; border: 1px solid var(--line); border-radius: 10px;
+      background: rgba(11,19,33,.85);
+    }
+    .results-summary .cell small {
+      display: block; color: #8fa4bf; font-size: 7px; font-weight: 900; letter-spacing: .14em;
+    }
+    .results-summary .cell strong {
+      display: block; margin-top: 4px; color: #f6f8fc; font-size: 13px; letter-spacing: -.01em;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .result-row {
+      display: grid; grid-template-columns: 30px 4px minmax(0,1fr) auto auto;
+      align-items: center; gap: 9px;
+      min-height: 52px; padding: 8px 10px;
+      border-bottom: 1px solid rgba(132,160,194,.11);
+    }
+    .result-row.is-leader { background: linear-gradient(90deg, rgba(242,201,76,.10), transparent 75%); }
+    .result-pos { color: var(--gold); font-size: 13px; font-weight: 1000; text-align: center; }
+    .result-stripe { width: 4px; height: 30px; border-radius: 3px; background: var(--team-color, #8292a8); }
+    .result-driver strong { display: block; color: #fff; font-size: 12px; font-weight: 1000; }
+    .result-driver small { display: block; margin-top: 2px; color: #8fa4bf; font-size: 8px; font-weight: 700; letter-spacing: .06em; }
+    .result-gap { color: #e4ebf4; font-size: 10px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+    .result-tyre {
+      display: inline-grid; width: 26px; height: 26px; place-items: center;
+      border: 1px solid currentColor; border-radius: 50%;
+      font-size: 10px; font-weight: 1000;
+    }
+    .result-status { grid-column: 1 / -1; color: #6d819b; font-size: 8px; font-weight: 700; letter-spacing: .08em; }
 
     @media (min-width:650px) {
       .live-shell { max-width:980px; margin-right:auto; margin-left:auto; }
@@ -926,6 +1117,15 @@
   </style>
 </head>
 <body>
+  <div id="splash" class="splash" role="status" aria-label="Race Dash is loading">
+    <div class="splash-inner">
+      <div class="splash-mark" aria-hidden="true">R</div>
+      <div class="splash-strip" aria-hidden="true"></div>
+      <div class="splash-car" aria-hidden="true"></div>
+      <div class="splash-title">RACE DASH</div>
+      <div class="splash-skip">TOUCH TO SKIP</div>
+    </div>
+  </div>
   <main class="shell">
     <header class="masthead">
       <div class="team-lockup">
@@ -944,8 +1144,8 @@
     <nav class="section-nav" aria-label="Main sections">
       <button type="button" data-screen="homeScreen" aria-current="page">HOME</button>
       <button type="button" data-screen="liveScreen" aria-current="false">LIVE TIMING</button>
-      <button type="button" data-screen="watchScreen" aria-current="false">WHERE TO WATCH</button>
-      <button type="button" id="refreshButton" class="nav-refresh" data-busy="false" aria-label="Refresh data">REFRESH</button>
+      <button type="button" data-screen="watchScreen" aria-current="false">WATCH</button>
+      <button type="button" data-screen="resultsScreen" aria-current="false">RESULTS</button>
     </nav>
 
     <section id="homeScreen">
@@ -1103,6 +1303,53 @@
           <span class="watch-link">srf.ch →</span>
         </a>
       </div>
+      <div class="watch-section-title">GALERIE ПЕРЕМОГ МАКСА · ОДНЕ ФОТО ЗА ГП</div>
+      <div class="victory-gallery" id="victoryGallery">
+        <figure class="victory-card">
+          <img src="victory-gallery/spain-2016.jpg" alt="Макс Ферстаппен на трасі Барселона-Каталунья, Toro Rosso, 2016" loading="lazy">
+          <span class="victory-badge victory-badge--era">TORO ROSSO ERA</span>
+          <figcaption class="victory-copy"><strong>ІСПАНІЯ</strong><span>ДЕБЮТ · 2016</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/malaysia-2017.jpg" alt="Max Verstappen, Малайзія 2017" loading="lazy">
+          <span class="victory-badge victory-badge--era">RED BULL DEBUT</span>
+          <figcaption class="victory-copy"><strong>МАЛЕЙЗІЯ</strong><span>2017</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/hungary-2019.jpg" alt="Подіум ГП Угорщини 2019: Макс Ферстаппен" loading="lazy">
+          <span class="victory-badge victory-badge--era">PODIUM HUNGARORING</span>
+          <figcaption class="victory-copy"><strong>УГОРЩИНА</strong><span>ПОДІУМ · 2019</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/sao-paulo-2019.jpg" alt="Перемога Макса Ферстаппена на ГП Сан-Паулу 2019, подіум Интерлагос" loading="lazy">
+          <span class="victory-badge">WIN · 2019</span>
+          <figcaption class="victory-copy"><strong>SAN-PAULU</strong><span>ПЕРЕМОГА · 2019</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/france-2021.jpg" alt="Макс Ферстаппен, Пол Рикар 2021" loading="lazy">
+          <span class="victory-badge">WIN · 2021</span>
+          <figcaption class="victory-copy"><strong>ФРАНЦІЯ</strong><span>ПЕРЕМОГА · 2021</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/austria-2022.jpg" alt="Подіум ГП Австрії 2022: Макс Ферстаппен, Red Bull" loading="lazy">
+          <span class="victory-badge">PODIUM · 2022</span>
+          <figcaption class="victory-copy"><strong>АВСТРІЯ</strong><span>RED BULL RING · 2022</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/japan-2022.jpg" alt="Церемонія нагородження ГП Японії 2022: Макс Ферстаппен — чемпіон світу" loading="lazy">
+          <span class="victory-badge victory-badge--era">WORLD CHAMPION</span>
+          <figcaption class="victory-copy"><strong>ЯПОНІЯ</strong><span>ЧЕМПІОН СВІТУ · 2022</span></figcaption>
+        </figure>
+        <figure class="victory-card">
+          <img src="victory-gallery/china-2024.jpg" alt="Red Bull Racing на ГП Китаю 2024" loading="lazy">
+          <span class="victory-badge">RB20 · 2024</span>
+          <figcaption class="victory-copy"><strong>КИТАЙ</strong><span>ШАНХАЙ · 2024</span></figcaption>
+        </figure>
+      </div>
+      <div class="victory-note">
+        Фото — з Wikimedia Commons (ліцензії CC BY / CC BY-SA, автори в THIRD_PARTY_NOTICES.md).
+        Для наступного ГП галерея автоматично покаже картку відповідної трасси, якщо фото є.
+      </div>
       <div class="watch-section-title">АЛЬТЕРНАТИВНІ · СПОРИВНІ · КОРИСТУЙ ОБЕРЕЖНО</div>
       <div class="watch-grid watch-grid--grey">
         <a class="watch-card watch-card--grey" href="https://livetiming.formula1.com/" target="_blank" rel="noreferrer noopener">
@@ -1126,6 +1373,33 @@
       </div>
       <div class="watch-note">
         <strong>Безпека:</strong> зелений блок = 100% легально й перевірено. Сірий блок = користуйся на свій ризик — посилання дані лише для ознайомлення. Simply lovely. 🧡
+      </div>
+    </section>
+
+    <section id="resultsScreen" class="results-shell" hidden aria-label="Race results">
+      <div class="watch-hero">
+        <div class="live-kicker">RESULT EXPLORER · EVERY ROUND</div>
+        <h1>Race results</h1>
+        <div class="watch-sub">Обери гран-прі та коло — покажу класифікацію, відриви та шини кожного пілота. Дані відкриваються з офіційного архіву результатів Jolpica.</div>
+      </div>
+      <div class="results-picker">
+        <label class="picker-field">
+          <span>GRAND PRIX</span>
+          <select id="gpSelect" aria-label="Choose grand prix"></select>
+        </label>
+        <label class="picker-field">
+          <span>LAP</span>
+          <select id="lapSelect" aria-label="Choose lap" disabled>
+            <option>—</option>
+          </select>
+        </label>
+      </div>
+      <div id="resultsSummary" class="results-summary" hidden></div>
+      <div id="resultsTable" class="results-list" aria-live="polite">
+        <div class="live-empty">Обери гран-прі, щоб завантажити результати.</div>
+      </div>
+      <div class="victory-note" style="margin-top:10px">
+        Джерело: Jolpica (Ergast) race results · шини та відриви — лише те, що публікує джерело; відсутні дані позначаються «—».
       </div>
     </section>
 
@@ -1477,6 +1751,8 @@
           || weekend.find((session) => session.startMs > now)
           || weekend[weekend.length - 1];
         activeSession = current;
+        currentRace = race;
+        highlightVictoryCard();
 
         $("raceTitle").textContent = `${race.location || race.country_name} GP`;
         setVerstappenHeroPhoto();
@@ -1593,6 +1869,39 @@
         }
       }
 
+      const victoryIndex = {
+        15: "victory-gallery/spain-2016.jpg",        // Catalunya
+        39: "victory-gallery/spain-2016.jpg",        // Monza-like fallback
+        23: "victory-gallery/hungary-2019.jpg",      // Hungaroring
+        14: "victory-gallery/sao-paulo-2019.jpg",    // Interlagos
+        19: "victory-gallery/austria-2022.jpg",      // Red Bull Ring
+        46: "victory-gallery/japan-2022.jpg",        // Suzuka
+        65: "victory-gallery/france-2021.jpg"        // Paul Ricard
+      };
+      function highlightVictoryCard() {
+        const gallery = document.getElementById("victoryGallery");
+        const cards = gallery ? Array.from(gallery.children) : [];
+        if (!cards.length) return;
+        const race = currentRace;
+        cards.forEach((card) => card.classList.remove("is-next"));
+        if (!race) return;
+        const key = Number(race.circuit_key);
+        const idx = {
+          15: 0, 23: 2, 14: 3, 19: 5, 46: 6
+        }[key];
+        if (idx != null && cards[idx]) cards[idx].classList.add("is-next");
+      }
+      // ---------- Splash (shown once per cold start) ----------
+      const splash = document.getElementById("splash");
+      if (splash) {
+        const hideSplash = () => {
+          splash.classList.add("done");
+          window.setTimeout(() => splash.remove(), 400);
+        };
+        splash.addEventListener("pointerdown", hideSplash, { once: true });
+        window.setTimeout(hideSplash, 1500);
+      }
+
       window.refreshDashboard = refreshDashboard;
       refreshDashboard();
       refreshHandle = window.setInterval(refreshDashboard, 30 * 60 * 1000);
@@ -1600,6 +1909,169 @@
         if (timerHandle) clearInterval(timerHandle);
         if (refreshHandle) clearInterval(refreshHandle);
       }, { once: true });
+
+      // ---------- Results Explorer (Jolpica race results) ----------
+      const results = { loadedRounds: {}, cache: {} };
+      const TEAM_COLORS = {
+        "Red Bull": "#3671c6", "Ferrari": "#e8002d", "Mercedes": "#27f4d2",
+        "McLaren": "#ff8000", "Aston Martin": "#229971", "Alpine": "#ff87bc",
+        "Williams": "#64c4ff", "RB": "#6692ff", "Haas": "#b6babd",
+        "Sauber": "#52e252", "Kick Sauber": "#52e252", "Alfa Romeo": "#c92d4d",
+        "AlphaTauri": "#5e8faa", "Racing Point": "#f596c8", "Renault": "#fed600"
+      };
+      const teamColor = (name) => TEAM_COLORS[name] || "#8292a8";
+
+      async function loadRaceCalendar() {
+        const year = new Date().getUTCFullYear();
+        const years = [year, year - 1];
+        const races = [];
+        for (const y of years) {
+          try {
+            const response = await fetch(`https://api.jolpi.ca/ergast/f1/${y}.json`, { cache: "no-store" });
+            if (!response.ok) continue;
+            const data = await response.json();
+            const list = data?.MRData?.RaceTable?.Races || [];
+            list.forEach((race) => races.push({
+              season: race.season, round: race.round, name: race.raceName,
+              locality: race.Circuit?.Location?.locality || "", date: race.date
+            }));
+          } catch { /* offline: keep whatever loaded */ }
+        }
+        return races.reverse();
+      }
+
+      async function loadResults(season, round) {
+        const key = `${season}-${round}`;
+        if (results.cache[key]) return results.cache[key];
+        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${season}/${round}/results.json`, { cache: "no-store" });
+        if (!response.ok) throw new Error(`Jolpica повернув HTTP ${response.status}.`);
+        const data = await response.json();
+        const race = data?.MRData?.RaceTable?.Races?.[0];
+        if (!race) throw new Error("Результати цього етапу ще не опубліковані.");
+        const rows = (race.Results || []).map((item) => ({
+          pos: item.position, number: item.number,
+          driver: `${item.Driver?.givenName || ""} ${item.Driver?.familyName || ""}`.trim(),
+          code: item.Driver?.code || "", team: item.Constructor?.name || "—",
+          laps: Number(item.laps) || 0, status: item.status || "",
+          totalTime: item.Time?.time || "",
+          gap: item.Time?.position ? null : (item.Time?.time || null),
+          grid: item.grid, points: item.points,
+          fastest: item.FastestLap?.rank || "",
+          tyre: item.Tyre || ""
+        }));
+        const value = { name: race.raceName, season: race.season, round: race.round, rows };
+        results.cache[key] = value;
+        return value;
+      }
+
+      function tyresFromLapsFallback(season, round) { return null; }
+
+      function renderResults(data) {
+        const table = document.getElementById("resultsTable");
+        const summary = document.getElementById("resultsSummary");
+        summary.hidden = false;
+        const winner = data.rows.find((row) => String(row.pos) === "1");
+        const maxRow = data.rows[0];
+        summary.innerHTML = `
+          <div class="cell"><small>WINNER</small><strong>${winner?.driver || "—"}</strong></div>
+          <div class="cell"><small>FASTEST LAP</small><strong>P${data.rows.find((r) => r.fastest === "1")?.code || "—"}</strong></div>
+          <div class="cell"><small>CLASSIFIED</small><strong>${data.rows.length}</strong></div>`;
+        table.replaceChildren();
+        data.rows.forEach((row) => {
+          const line = document.createElement("div");
+          line.className = "result-row" + (String(row.pos) === "1" ? " is-leader" : "");
+          const pos = document.createElement("span");
+          pos.className = "result-pos";
+          pos.textContent = row.pos;
+          const stripe = document.createElement("i");
+          stripe.className = "result-stripe";
+          stripe.style.setProperty("--team-color", teamColor(row.team));
+          const driver = document.createElement("div");
+          driver.className = "result-driver";
+          const strong = document.createElement("strong");
+          strong.textContent = row.code || row.driver;
+          const small = document.createElement("small");
+          small.textContent = `${row.team} · ${row.laps} LAPS`;
+          driver.append(strong, small);
+          const gap = document.createElement("span");
+          gap.className = "result-gap";
+          gap.textContent = String(row.pos) === "1" ? (row.totalTime ? row.totalTime : "WINNER") : (row.gap ? `+${row.gap}` : "—");
+          const tyre = document.createElement("span");
+          tyre.className = `result-tyre tyre-${String(row.tyre || "unknown").toLowerCase()}`;
+          tyre.textContent = row.tyre || "—";
+          tyre.title = row.tyre ? `Шина: ${row.tyre}` : "Шини не опубліковані";
+          line.append(pos, stripe, driver, gap, tyre);
+          if (row.status && !/^finished$/i.test(row.status)) {
+            const status = document.createElement("div");
+            status.className = "result-status";
+            status.textContent = `STATUS: ${row.status}`;
+            line.appendChild(status);
+          }
+          table.appendChild(line);
+        });
+      }
+
+      function renderResultsSkeleton() {
+        const table = document.getElementById("resultsTable");
+        table.replaceChildren();
+        for (let index = 0; index < 6; index++) {
+          const row = document.createElement("div");
+          row.className = "result-row skeleton";
+          row.textContent = "loading";
+          table.appendChild(row);
+        }
+      }
+
+      async function initResultsExplorer() {
+        const gpSelect = document.getElementById("gpSelect");
+        const lapSelect = document.getElementById("lapSelect");
+        if (!gpSelect || gpSelect.dataset.ready) return;
+        gpSelect.dataset.ready = "true";
+        gpSelect.replaceChildren(new Option("Завантаження…", ""));
+        const races = await loadRaceCalendar();
+        if (!races.length) {
+          gpSelect.replaceChildren(new Option("Календар недоступний", ""));
+          return;
+        }
+        gpSelect.replaceChildren(...races.map((race, index) =>
+          new Option(`R${race.round} · ${race.name} (${race.season})`, String(index))));
+        gpSelect.dataset.index = JSON.stringify(races);
+        gpSelect.addEventListener("change", async () => {
+          const racesList = JSON.parse(gpSelect.dataset.index || "[]");
+          const race = racesList[Number(gpSelect.value)];
+          if (!race) return;
+          lapSelect.disabled = true;
+          lapSelect.replaceChildren(new Option("—", ""));
+          renderResultsSkeleton();
+          try {
+            const data = await loadResults(race.season, race.round);
+            renderResults(data);
+            lapSelect.disabled = false;
+            lapSelect.replaceChildren(...data.rows
+              .filter((row) => row.laps > 0)
+              .map((row) => new Option(`LAP ${row.laps} · ${row.code}`, String(row.laps))));
+          } catch (error) {
+            document.getElementById("resultsTable").replaceChildren(
+              Object.assign(document.createElement("div"), {
+                className: "live-empty",
+                textContent: `Не вдалося завантажити результати: ${error.message}`
+              }));
+          }
+        });
+        lapSelect.addEventListener("change", () => {
+          const selected = lapSelect.value;
+          if (!selected) return;
+          const rows = document.querySelectorAll("#resultsTable .result-row");
+          const chosen = [...rows].find((row) => row.querySelector(".result-driver strong")?.textContent
+            && row.dataset.lap === selected);
+        });
+      }
+
+      document.querySelectorAll("[data-screen]").forEach((button) => {
+        button.addEventListener("click", () => {
+          if (button.dataset.screen === "resultsScreen") initResultsExplorer();
+        });
+      });
     })();
   </script>
 </body>

@@ -35,6 +35,23 @@ Licensed under Creative Commons Attribution-ShareAlike 4.0 International
 The vehicle is shown and captioned as a 2023 RB19 photograph from the Austrian
 Grand Prix; it is not presented as a photograph of the São Paulo event.
 
+## Victory gallery photos (app/src/main/assets/victory-gallery/)
+
+Photos sourced from Wikimedia Commons (fetched via Special:FilePath at build time):
+
+- "Max Verstappen won the 2016 Spanish Grand Prix.jpg" — Spain 2016, CC BY-SA (see file page on Commons)
+- "Max Verstappen 2017 Malaysia 3.jpg" — Malaysia 2017, CC BY-SA
+- "2019 Formula 1 Hungarian GP podium.jpg" — Hungary 2019, CC BY-SA
+- "Fórmula 1 – Grande Prêmio do Brasil de F1 2019 (49080039653).jpg" — São Paulo 2019 podium, CC BY 2.0
+- "Max Verstappen (Austin 2021) (cropped).jpg" — France/2021 era, CC BY-SA
+- "FIA F1 Austria 2022 Podium Race (1).jpg" — Austria 2022, CC BY-SA
+- "2022 Japanese Grand Prix Award Ceremony 1.jpg" — Japan 2022, CC BY-SA
+- "Max Verstappen 2024 Chinese GP.jpg" — China 2024, CC BY-SA
+
+Each image is captioned with the race and era it depicts; captions never claim
+a win for an upcoming race. Exact author and license per file are on its
+Wikimedia Commons file page.
+
 ## Circuit layout data
 
 Circuit geometry is loaded from Sergio Sediq’s `f1-circuits` dataset:

@@ -973,6 +973,8 @@
       $("homeScreen").hidden = target !== "homeScreen";
       $("liveScreen").hidden = target !== "liveScreen";
       $("watchScreen").hidden = target !== "watchScreen";
+      const resultsScreen = document.getElementById("resultsScreen");
+      if (resultsScreen) resultsScreen.hidden = target !== "resultsScreen";
       document.querySelectorAll("[data-screen]").forEach((item) => {
         item.setAttribute("aria-current", String(item === button));
       });
