@@ -35,6 +35,11 @@ schedule uses separate rows and highlights the current or next session.
 - Session calendar: [Jolpica](https://jolpi.ca/), refreshed when the app opens
   and periodically in the background (WorkManager checks every 15 minutes;
   Android may defer background work to save battery).
+- Race classifications, lap-by-lap timings, Max Verstappen's Grand Prix wins,
+  and current-season driver standings are loaded from Jolpica. The Watch guide
+  uses the upcoming session from the cached Jolpica calendar, with OpenF1 as a
+  fallback when that cache is empty. Broadcaster links and regional availability
+  are curated reference information; there is no shared public API for them.
 - Circuit geometry: [f1-circuits](https://github.com/SergioSediq/f1-circuits),
   mapped from Jolpica circuit IDs.
 - The dashboard formats session times with JavaScript
@@ -130,3 +135,45 @@ reconnects with backoff. The feed is free to access but is not a supported or
 guaranteed public API; it can change, return partial data, or have no live
 session to show. OpenF1 remains the historical-data fallback; its real-time API
 requires a paid subscription. Jolpica supplies the race calendar, not telemetry.
+
+## 🛡 Система безпеки (Security Core)
+
+Застосунок захищено власною системою безпеки (~30 MB захищеного коду та
+ресурсів у складі APK), яка складається з трьох модулів:
+
+### 1. Обов'язкова реєстрація
+- При першому запуску відкривається **SecurityGateActivity** — без реєстрації
+  застосунок не працює.
+- Для реєстрації обов'язково потрібні: **нікнейм**, **Gmail-адреса**
+  (тільки `@gmail.com`) та **пароль** (мін. 8 символів, літери + цифри).
+- На Gmail надсилається **6-значний код підтвердження** — без нього акаунт
+  не створюється.
+- Пароль зберігається лише як **PBKDF2-HMAC-SHA256 хеш** з випадковою сіллю
+  (120 000 ітерацій).
+
+### 2. Вхід та 2FA
+- Повторний запуск вимагає входу за нікнеймом і паролем.
+- Опційно можна **увімкнути двофакторну автентифікацію** — тоді при кожному
+  вході на Gmail надсилається новий 6-значний код (дійсний 5 хвилин).
+
+### 3. Контроль цілісності файлів
+- Після успішної реєстрації система будує **еталонний SHA-256 знімок** усіх
+  файлів програми (assets, res/raw, файли проєкту в VS Code).
+- При кожному запуску перевіряється, чи не змінилися файли **з моменту
+  останнього схвалення**.
+- Якщо виявлено зміну/додавання/видалення файлів, з'являється діалог з
+  вибором:
+  - **«Це не я»** — система автоматично **скасовує зміни** та відновлює
+    еталонну версію файлів;
+  - **«Це я»** — зміни приймаються лише після введення **власного пароля**
+    користувача.
+
+### Основні файли
+| Файл | Призначення |
+|---|---|
+| `SecurityManager.kt` | реєстрація, логін, 2FA, хешування паролів, SHA-256 знімки файлів |
+| `SecurityGateActivity.kt` | екран реєстрації/входу та діалог «Це не я / Це я» |
+| `EmailSender.kt` | доставка 6-значних кодів на Gmail |
+
+Всі коди та хеші зберігаються у приватному сховищі застосунку
+(`security_core_prefs`) і не доступні іншим програмам.

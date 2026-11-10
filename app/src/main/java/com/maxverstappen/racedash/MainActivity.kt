@@ -34,6 +34,22 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 🔒 Система безпеки: без відкритої сесії доступ заборонено.
+        if (!SecurityManager.isSessionOpen(this)) {
+            startActivity(android.content.Intent(this, SecurityGateActivity::class.java))
+            finish()
+            return
+        }
+
+        // 🔒 Перевірка цілісності файлів застосунку.
+        val integrity = SecurityManager.verifyIntegrity(this)
+        if (!integrity.clean) {
+            startActivity(android.content.Intent(this, SecurityGateActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
 
         dashboard = findViewById(R.id.dashboard)

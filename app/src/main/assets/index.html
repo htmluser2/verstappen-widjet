@@ -485,10 +485,31 @@
     .victory-gallery {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px;
     }
+    .victory-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px;
+      margin: 0 0 10px;
+    }
+    .victory-stat {
+      padding: 10px; border: 1px solid var(--line); border-radius: 10px;
+      background: rgba(11,19,33,.85);
+    }
+    .victory-stat span {
+      display: block; color: #8fa4bf; font-size: 7px; font-weight: 900; letter-spacing: .14em;
+    }
+    .victory-stat strong {
+      display: block; margin-top: 4px; color: #f6f8fc; font-size: 13px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .victory-card {
       position: relative; overflow: hidden; border-radius: 12px;
       aspect-ratio: 4/5; border: 1px solid var(--line);
       background: #0a111b; cursor: default;
+    }
+    .victory-placeholder {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      color: rgba(242,201,76,.8); font-size: 40px; font-weight: 1000;
+      background: radial-gradient(circle at 50% 35%, rgba(52,83,121,.7), transparent 60%),
+        linear-gradient(145deg, #17243a, #080d16 75%);
     }
     .victory-card img {
       position: absolute; inset: 0; width: 100%; height: 100%;
@@ -1303,52 +1324,17 @@
           <span class="watch-link">srf.ch →</span>
         </a>
       </div>
-      <div class="watch-section-title">GALERIE ПЕРЕМОГ МАКСА · ОДНЕ ФОТО ЗА ГП</div>
+      <div class="watch-section-title">ПЕРЕМОГИ ТА СЕЗОННА СТАТИСТИКА · JOLPICA API</div>
+      <div id="victoryStats" class="victory-stats" aria-live="polite">
+        <div class="live-empty">Завантажую статистику з Jolpica…</div>
+      </div>
       <div class="victory-gallery" id="victoryGallery">
-        <figure class="victory-card">
-          <img src="victory-gallery/spain-2016.jpg" alt="Макс Ферстаппен на трасі Барселона-Каталунья, Toro Rosso, 2016" loading="lazy">
-          <span class="victory-badge victory-badge--era">TORO ROSSO ERA</span>
-          <figcaption class="victory-copy"><strong>ІСПАНІЯ</strong><span>ДЕБЮТ · 2016</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/malaysia-2017.jpg" alt="Max Verstappen, Малайзія 2017" loading="lazy">
-          <span class="victory-badge victory-badge--era">RED BULL DEBUT</span>
-          <figcaption class="victory-copy"><strong>МАЛЕЙЗІЯ</strong><span>2017</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/hungary-2019.jpg" alt="Подіум ГП Угорщини 2019: Макс Ферстаппен" loading="lazy">
-          <span class="victory-badge victory-badge--era">PODIUM HUNGARORING</span>
-          <figcaption class="victory-copy"><strong>УГОРЩИНА</strong><span>ПОДІУМ · 2019</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/sao-paulo-2019.jpg" alt="Перемога Макса Ферстаппена на ГП Сан-Паулу 2019, подіум Интерлагос" loading="lazy">
-          <span class="victory-badge">WIN · 2019</span>
-          <figcaption class="victory-copy"><strong>SAN-PAULU</strong><span>ПЕРЕМОГА · 2019</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/france-2021.jpg" alt="Макс Ферстаппен, Пол Рикар 2021" loading="lazy">
-          <span class="victory-badge">WIN · 2021</span>
-          <figcaption class="victory-copy"><strong>ФРАНЦІЯ</strong><span>ПЕРЕМОГА · 2021</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/austria-2022.jpg" alt="Подіум ГП Австрії 2022: Макс Ферстаппен, Red Bull" loading="lazy">
-          <span class="victory-badge">PODIUM · 2022</span>
-          <figcaption class="victory-copy"><strong>АВСТРІЯ</strong><span>RED BULL RING · 2022</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/japan-2022.jpg" alt="Церемонія нагородження ГП Японії 2022: Макс Ферстаппен — чемпіон світу" loading="lazy">
-          <span class="victory-badge victory-badge--era">WORLD CHAMPION</span>
-          <figcaption class="victory-copy"><strong>ЯПОНІЯ</strong><span>ЧЕМПІОН СВІТУ · 2022</span></figcaption>
-        </figure>
-        <figure class="victory-card">
-          <img src="victory-gallery/china-2024.jpg" alt="Red Bull Racing на ГП Китаю 2024" loading="lazy">
-          <span class="victory-badge">RB20 · 2024</span>
-          <figcaption class="victory-copy"><strong>КИТАЙ</strong><span>ШАНХАЙ · 2024</span></figcaption>
-        </figure>
+        <div class="live-empty">Перемоги з’являться після відповіді API.</div>
       </div>
       <div class="victory-note">
-        Фото — з Wikimedia Commons (ліцензії CC BY / CC BY-SA, автори в THIRD_PARTY_NOTICES.md).
-        Для наступного ГП галерея автоматично покаже картку відповідної трасси, якщо фото є.
+        Перемоги та сезонна позиція завантажуються з Jolpica. Фото — локальні архівні матеріали
+        лише для відповідних ГП; для решти перемог показано картку без фото.
+        Джерела й ліцензії фото — у THIRD_PARTY_NOTICES.md.
       </div>
       <div class="watch-section-title">АЛЬТЕРНАТИВНІ · СПОРИВНІ · КОРИСТУЙ ОБЕРЕЖНО</div>
       <div class="watch-grid watch-grid--grey">
@@ -1380,7 +1366,7 @@
       <div class="watch-hero">
         <div class="live-kicker">RESULT EXPLORER · EVERY ROUND</div>
         <h1>Race results</h1>
-        <div class="watch-sub">Обери гран-прі та коло — покажу класифікацію, відриви та шини кожного пілота. Дані відкриваються з офіційного архіву результатів Jolpica.</div>
+        <div class="watch-sub">Обери гран-прі та коло — покажу класифікацію, відриви та шини кожного пілота.         Результати й часи кіл завантажуються з Jolpica.</div>
       </div>
       <div class="results-picker">
         <label class="picker-field">
@@ -1388,9 +1374,9 @@
           <select id="gpSelect" aria-label="Choose grand prix"></select>
         </label>
         <label class="picker-field">
-          <span>LAP</span>
+          <span>LAP TIMING</span>
           <select id="lapSelect" aria-label="Choose lap" disabled>
-            <option>—</option>
+            <option value="">Підсумок гонки</option>
           </select>
         </label>
       </div>
@@ -1464,6 +1450,7 @@
       });
       const $ = (id) => document.getElementById(id);
       let activeSession = null;
+      let currentRace = null;
       let timerHandle = 0;
       let refreshHandle = 0;
 
@@ -1869,15 +1856,177 @@
         }
       }
 
-      const victoryIndex = {
-        15: "victory-gallery/spain-2016.jpg",        // Catalunya
-        39: "victory-gallery/spain-2016.jpg",        // Monza-like fallback
-        23: "victory-gallery/hungary-2019.jpg",      // Hungaroring
-        14: "victory-gallery/sao-paulo-2019.jpg",    // Interlagos
-        19: "victory-gallery/austria-2022.jpg",      // Red Bull Ring
-        46: "victory-gallery/japan-2022.jpg",        // Suzuka
-        65: "victory-gallery/france-2021.jpg"        // Paul Ricard
+      const VICTORY_CACHE_KEY = "verstappen-racedash-victories-v1";
+      const VICTORY_IMAGES = {
+        "2016:catalunya": "victory-gallery/spain-2016.jpg",
+        "2017:sepang": "victory-gallery/malaysia-2017.jpg",
+        "2019:interlagos": "victory-gallery/sao-paulo-2019.jpg",
+        "2022:red_bull_ring": "victory-gallery/austria-2022.jpg",
+        "2022:suzuka": "victory-gallery/japan-2022.jpg",
+        "2024:shanghai": "victory-gallery/china-2024.jpg"
       };
+      const VICTORY_CIRCUIT_KEYS = {
+        catalunya: 15, monza: 39, hungaroring: 23, interlagos: 14,
+        red_bull_ring: 19, suzuka: 46
+      };
+      let victoryWins = [];
+
+      function renderVictoryStats(total, standing, savedAt) {
+        const stats = document.getElementById("victoryStats");
+        if (!stats) return;
+        stats.replaceChildren();
+        const entries = [
+          ["CAREER GP WINS", String(total)],
+          [
+            `${standing?.season || new Date().getUTCFullYear()} DRIVER STANDING`,
+            standing ? `P${standing.position} · ${standing.points} PTS` : "NOT PUBLISHED"
+          ],
+          [
+            "SEASON WINS",
+            standing ? `${standing.wins} · AFTER ROUND ${standing.round}` : "NOT PUBLISHED"
+          ]
+        ];
+        entries.forEach(([label, value]) => {
+          const item = document.createElement("div");
+          item.className = "victory-stat";
+          const title = document.createElement("span");
+          title.textContent = label;
+          const content = document.createElement("strong");
+          content.textContent = value;
+          item.append(title, content);
+          stats.appendChild(item);
+        });
+        if (savedAt) stats.dataset.updatedAt = String(savedAt);
+      }
+
+      function renderVictoryGallery(data) {
+        const gallery = document.getElementById("victoryGallery");
+        if (!gallery) return;
+        victoryWins = data.wins;
+        renderVictoryStats(data.total, data.standing, data.savedAt);
+        gallery.replaceChildren();
+        if (!data.wins.length) {
+          gallery.appendChild(Object.assign(document.createElement("div"), {
+            className: "live-empty",
+            textContent: "Jolpica ще не опублікувала перемоги Макса Ферстаппена."
+          }));
+          return;
+        }
+        data.wins.slice(-8).reverse().forEach((win) => {
+          const circuitId = win.Circuit?.circuitId || "";
+          const season = String(win.season || "");
+          const image = VICTORY_IMAGES[`${season}:${circuitId}`];
+          const card = document.createElement("figure");
+          card.className = "victory-card";
+          const circuitKey = VICTORY_CIRCUIT_KEYS[circuitId];
+          if (circuitKey) card.dataset.circuitKey = String(circuitKey);
+          if (image) {
+            const photo = document.createElement("img");
+            photo.src = image;
+            photo.alt = `Архівне фото ГП ${win.raceName}, ${season}`;
+            photo.loading = "lazy";
+            card.appendChild(photo);
+          } else {
+            const placeholder = document.createElement("div");
+            placeholder.className = "victory-placeholder";
+            placeholder.textContent = "P1";
+            placeholder.setAttribute("aria-hidden", "true");
+            card.appendChild(placeholder);
+          }
+          const badge = document.createElement("span");
+          badge.className = "victory-badge";
+          badge.textContent = `WIN · ${season}`;
+          const caption = document.createElement("figcaption");
+          caption.className = "victory-copy";
+          const name = document.createElement("strong");
+          name.textContent = win.raceName || "Grand Prix";
+          const location = document.createElement("span");
+          location.textContent = [
+            win.Circuit?.Location?.country,
+            `ROUND ${win.round}`
+          ].filter(Boolean).join(" · ");
+          caption.append(name, location);
+          card.append(badge, caption);
+          gallery.appendChild(card);
+        });
+        highlightVictoryCard();
+      }
+
+      async function loadVictoryHistory() {
+        const gallery = document.getElementById("victoryGallery");
+        if (!gallery || gallery.dataset.loading === "true") return;
+        gallery.dataset.loading = "true";
+        try {
+          let cached = null;
+          try {
+            cached = JSON.parse(localStorage.getItem(VICTORY_CACHE_KEY) || "null");
+          } catch (error) {
+            console.warn("Could not read the victories cache.", error);
+          }
+          const year = new Date().getUTCFullYear();
+          let standing = null;
+          try {
+            const response = await fetch(
+              `https://api.jolpi.ca/ergast/f1/${year}/drivers/max_verstappen/driverStandings.json`,
+              { cache: "no-store" }
+            );
+            if (!response.ok) throw new Error(`Jolpica returned HTTP ${response.status}.`);
+            const data = await response.json();
+            const list = data?.MRData?.StandingsTable?.StandingsLists || [];
+            const entry = list.at(-1)?.DriverStandings?.[0];
+            if (entry) {
+              standing = {
+                season: data.MRData.StandingsTable.season,
+                round: data.MRData.StandingsTable.round,
+                position: entry.position,
+                points: entry.points,
+                wins: entry.wins
+              };
+            }
+          } catch (error) {
+            console.info("Current-season standings are unavailable.", error);
+          }
+
+          if (cached?.wins?.length) {
+            renderVictoryGallery({ ...cached, standing: standing || cached.standing });
+          }
+          if (cached?.wins?.length && Date.now() - Number(cached.savedAt) < 6 * 60 * 60 * 1000) {
+            return;
+          }
+
+          const response = await fetch(
+            "https://api.jolpi.ca/ergast/f1/drivers/max_verstappen/results/1.json?limit=100",
+            { cache: "no-store" }
+          );
+          if (!response.ok) throw new Error(`Jolpica returned HTTP ${response.status}.`);
+          const data = await response.json();
+          const races = data?.MRData?.RaceTable?.Races;
+          if (!Array.isArray(races)) throw new Error("Jolpica response has no victory data.");
+          const value = {
+            total: Number(data.MRData.total) || races.length,
+            wins: races,
+            standing: standing || cached?.standing || null,
+            savedAt: Date.now()
+          };
+          renderVictoryGallery(value);
+          try {
+            localStorage.setItem(VICTORY_CACHE_KEY, JSON.stringify(value));
+          } catch (error) {
+            console.warn("Could not save the victories cache.", error);
+          }
+        } catch (error) {
+          console.warn("Could not load Verstappen's race victories.", error);
+          if (!victoryWins.length) {
+            gallery.replaceChildren(Object.assign(document.createElement("div"), {
+              className: "live-empty",
+              textContent: `Не вдалося завантажити перемоги з Jolpica: ${error.message}`
+            }));
+          }
+        } finally {
+          gallery.dataset.loading = "false";
+        }
+      }
+
       function highlightVictoryCard() {
         const gallery = document.getElementById("victoryGallery");
         const cards = gallery ? Array.from(gallery.children) : [];
@@ -1885,11 +2034,8 @@
         const race = currentRace;
         cards.forEach((card) => card.classList.remove("is-next"));
         if (!race) return;
-        const key = Number(race.circuit_key);
-        const idx = {
-          15: 0, 23: 2, 14: 3, 19: 5, 46: 6
-        }[key];
-        if (idx != null && cards[idx]) cards[idx].classList.add("is-next");
+        const target = cards.find((card) => card.dataset.circuitKey === String(race.circuit_key));
+        target?.classList.add("is-next");
       }
       // ---------- Splash (shown once per cold start) ----------
       const splash = document.getElementById("splash");
@@ -1911,7 +2057,7 @@
       }, { once: true });
 
       // ---------- Results Explorer (Jolpica race results) ----------
-      const results = { loadedRounds: {}, cache: {} };
+      const results = { cache: {}, activeRace: null, requestId: 0 };
       const TEAM_COLORS = {
         "Red Bull": "#3671c6", "Ferrari": "#e8002d", "Mercedes": "#27f4d2",
         "McLaren": "#ff8000", "Aston Martin": "#229971", "Alpine": "#ff87bc",
@@ -1950,6 +2096,7 @@
         if (!race) throw new Error("Результати цього етапу ще не опубліковані.");
         const rows = (race.Results || []).map((item) => ({
           pos: item.position, number: item.number,
+          driverId: item.Driver?.driverId || "",
           driver: `${item.Driver?.givenName || ""} ${item.Driver?.familyName || ""}`.trim(),
           code: item.Driver?.code || "", team: item.Constructor?.name || "—",
           laps: Number(item.laps) || 0, status: item.status || "",
@@ -1964,44 +2111,83 @@
         return value;
       }
 
-      function tyresFromLapsFallback(season, round) { return null; }
+      async function loadLapTimes(season, round, lap) {
+        const key = `${season}-${round}-lap-${lap}`;
+        if (results.cache[key]) return results.cache[key];
+        const response = await fetch(
+          `https://api.jolpi.ca/ergast/f1/${season}/${round}/laps/${lap}.json?limit=100`,
+          { cache: "no-store" }
+        );
+        if (!response.ok) throw new Error(`Jolpica повернув HTTP ${response.status}.`);
+        const data = await response.json();
+        const timings = data?.MRData?.RaceTable?.Races?.[0]?.Laps?.[0]?.Timings;
+        if (!Array.isArray(timings) || !timings.length) {
+          throw new Error(`Часові відмітки для кола ${lap} не опубліковані.`);
+        }
+        const race = await loadResults(season, round);
+        const drivers = new Map(race.rows.map((row) => [row.driverId, row]));
+        const rows = timings.map((timing) => {
+          const driver = drivers.get(timing.driverId);
+          return {
+            pos: timing.position,
+            driver: driver?.driver || timing.driverId,
+            code: driver?.code || timing.driverId.toUpperCase(),
+            team: driver?.team || "—",
+            time: timing.time
+          };
+        }).sort((a, b) => Number(a.pos) - Number(b.pos));
+        const value = { season, round, lap, rows };
+        results.cache[key] = value;
+        return value;
+      }
 
-      function renderResults(data) {
-        const table = document.getElementById("resultsTable");
+      function renderSummary(entries) {
         const summary = document.getElementById("resultsSummary");
+        summary.replaceChildren();
         summary.hidden = false;
-        const winner = data.rows.find((row) => String(row.pos) === "1");
-        const maxRow = data.rows[0];
-        summary.innerHTML = `
-          <div class="cell"><small>WINNER</small><strong>${winner?.driver || "—"}</strong></div>
-          <div class="cell"><small>FASTEST LAP</small><strong>P${data.rows.find((r) => r.fastest === "1")?.code || "—"}</strong></div>
-          <div class="cell"><small>CLASSIFIED</small><strong>${data.rows.length}</strong></div>`;
+        entries.forEach(([label, value]) => {
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          const heading = document.createElement("small");
+          heading.textContent = label;
+          const content = document.createElement("strong");
+          content.textContent = value;
+          cell.append(heading, content);
+          summary.appendChild(cell);
+        });
+      }
+
+      function renderResultRows(rows, lapMode = false) {
+        const table = document.getElementById("resultsTable");
         table.replaceChildren();
-        data.rows.forEach((row) => {
+        rows.forEach((row) => {
           const line = document.createElement("div");
           line.className = "result-row" + (String(row.pos) === "1" ? " is-leader" : "");
           const pos = document.createElement("span");
           pos.className = "result-pos";
-          pos.textContent = row.pos;
+          pos.textContent = row.pos || "—";
           const stripe = document.createElement("i");
           stripe.className = "result-stripe";
           stripe.style.setProperty("--team-color", teamColor(row.team));
           const driver = document.createElement("div");
           driver.className = "result-driver";
-          const strong = document.createElement("strong");
-          strong.textContent = row.code || row.driver;
-          const small = document.createElement("small");
-          small.textContent = `${row.team} · ${row.laps} LAPS`;
-          driver.append(strong, small);
+          const name = document.createElement("strong");
+          name.textContent = row.code || row.driver || "—";
+          const detail = document.createElement("small");
+          detail.textContent = lapMode ? `${row.driver} · ${row.team}` : `${row.team} · ${row.laps} LAPS`;
+          driver.append(name, detail);
           const gap = document.createElement("span");
           gap.className = "result-gap";
-          gap.textContent = String(row.pos) === "1" ? (row.totalTime ? row.totalTime : "WINNER") : (row.gap ? `+${row.gap}` : "—");
+          gap.textContent = lapMode
+            ? row.time || "—"
+            : String(row.pos) === "1" ? (row.totalTime || "WINNER") : (row.gap ? `+${row.gap}` : "—");
           const tyre = document.createElement("span");
           tyre.className = `result-tyre tyre-${String(row.tyre || "unknown").toLowerCase()}`;
           tyre.textContent = row.tyre || "—";
           tyre.title = row.tyre ? `Шина: ${row.tyre}` : "Шини не опубліковані";
+          if (lapMode) tyre.hidden = true;
           line.append(pos, stripe, driver, gap, tyre);
-          if (row.status && !/^finished$/i.test(row.status)) {
+          if (!lapMode && row.status && !/^finished$/i.test(row.status)) {
             const status = document.createElement("div");
             status.className = "result-status";
             status.textContent = `STATUS: ${row.status}`;
@@ -2011,8 +2197,34 @@
         });
       }
 
+      function renderResults(data) {
+        const winner = data.rows.find((row) => String(row.pos) === "1");
+        renderSummary([
+          ["WINNER", winner?.driver || "—"],
+          ["FASTEST LAP", data.rows.find((row) => row.fastest === "1")?.code || "—"],
+          ["CLASSIFIED", String(data.rows.length)]
+        ]);
+        renderResultRows(data.rows);
+      }
+
+      function renderLapResults(data) {
+        const timeValue = (value) => String(value || "").split(":")
+          .map(Number)
+          .reduce((total, part) => total * 60 + part, 0);
+        const fastest = data.rows.reduce((best, row) => {
+          return timeValue(row.time) < timeValue(best.time) ? row : best;
+        }, data.rows[0]);
+        renderSummary([
+          [`LAP ${data.lap}`, data.rows.length ? `${data.rows.length} DRIVERS` : "—"],
+          ["FASTEST", fastest?.time || "—"],
+          ["DRIVER", fastest?.code || "—"]
+        ]);
+        renderResultRows(data.rows, true);
+      }
+
       function renderResultsSkeleton() {
         const table = document.getElementById("resultsTable");
+        document.getElementById("resultsSummary").hidden = true;
         table.replaceChildren();
         for (let index = 0; index < 6; index++) {
           const row = document.createElement("div");
@@ -2025,32 +2237,47 @@
       async function initResultsExplorer() {
         const gpSelect = document.getElementById("gpSelect");
         const lapSelect = document.getElementById("lapSelect");
-        if (!gpSelect || gpSelect.dataset.ready) return;
-        gpSelect.dataset.ready = "true";
+        if (!gpSelect || gpSelect.dataset.ready === "true" || gpSelect.dataset.loading === "true") return;
+        gpSelect.dataset.loading = "true";
         gpSelect.replaceChildren(new Option("Завантаження…", ""));
-        const races = await loadRaceCalendar();
-        if (!races.length) {
-          gpSelect.replaceChildren(new Option("Календар недоступний", ""));
-          return;
+        try {
+          const races = await loadRaceCalendar();
+          if (!races.length) {
+            gpSelect.replaceChildren(new Option("API недоступне — натисни RESULTS ще раз", ""));
+            return;
+          }
+          gpSelect.replaceChildren(...races.map((race, index) =>
+            new Option(`R${race.round} · ${race.name} (${race.season})`, String(index))));
+          gpSelect.dataset.index = JSON.stringify(races);
+          gpSelect.dataset.ready = "true";
+        } finally {
+          gpSelect.dataset.loading = "false";
         }
-        gpSelect.replaceChildren(...races.map((race, index) =>
-          new Option(`R${race.round} · ${race.name} (${race.season})`, String(index))));
-        gpSelect.dataset.index = JSON.stringify(races);
         gpSelect.addEventListener("change", async () => {
           const racesList = JSON.parse(gpSelect.dataset.index || "[]");
           const race = racesList[Number(gpSelect.value)];
           if (!race) return;
+          const requestId = ++results.requestId;
+          results.activeRace = race;
           lapSelect.disabled = true;
-          lapSelect.replaceChildren(new Option("—", ""));
+          lapSelect.replaceChildren(new Option("Підсумок гонки", ""));
           renderResultsSkeleton();
           try {
             const data = await loadResults(race.season, race.round);
+            if (requestId !== results.requestId) return;
+            if (!data.rows.length) throw new Error("Результати цього етапу ще не опубліковані.");
             renderResults(data);
-            lapSelect.disabled = false;
-            lapSelect.replaceChildren(...data.rows
-              .filter((row) => row.laps > 0)
-              .map((row) => new Option(`LAP ${row.laps} · ${row.code}`, String(row.laps))));
+            const maxLap = Math.max(0, ...data.rows.map((row) => row.laps));
+            if (maxLap > 0) {
+              lapSelect.replaceChildren(
+                new Option("Підсумок гонки", ""),
+                ...Array.from({ length: maxLap }, (_, index) =>
+                  new Option(`КОЛО ${index + 1}`, String(index + 1)))
+              );
+              lapSelect.disabled = false;
+            }
           } catch (error) {
+            if (requestId !== results.requestId) return;
             document.getElementById("resultsTable").replaceChildren(
               Object.assign(document.createElement("div"), {
                 className: "live-empty",
@@ -2058,18 +2285,44 @@
               }));
           }
         });
-        lapSelect.addEventListener("change", () => {
-          const selected = lapSelect.value;
-          if (!selected) return;
-          const rows = document.querySelectorAll("#resultsTable .result-row");
-          const chosen = [...rows].find((row) => row.querySelector(".result-driver strong")?.textContent
-            && row.dataset.lap === selected);
+        lapSelect.addEventListener("change", async () => {
+          const race = results.activeRace;
+          if (!race) return;
+          const requestId = ++results.requestId;
+          if (!lapSelect.value) {
+            try {
+              const data = await loadResults(race.season, race.round);
+              if (requestId === results.requestId) renderResults(data);
+            } catch (error) {
+              if (requestId === results.requestId) {
+                document.getElementById("resultsTable").replaceChildren(
+                  Object.assign(document.createElement("div"), {
+                    className: "live-empty",
+                    textContent: `Не вдалося завантажити результати: ${error.message}`
+                  }));
+              }
+            }
+            return;
+          }
+          renderResultsSkeleton();
+          try {
+            const data = await loadLapTimes(race.season, race.round, lapSelect.value);
+            if (requestId === results.requestId) renderLapResults(data);
+          } catch (error) {
+            if (requestId !== results.requestId) return;
+            document.getElementById("resultsTable").replaceChildren(
+              Object.assign(document.createElement("div"), {
+                className: "live-empty",
+                textContent: `Не вдалося завантажити часи кола: ${error.message}`
+              }));
+          }
         });
       }
 
       document.querySelectorAll("[data-screen]").forEach((button) => {
         button.addEventListener("click", () => {
           if (button.dataset.screen === "resultsScreen") initResultsExplorer();
+          if (button.dataset.screen === "watchScreen") loadVictoryHistory();
         });
       });
     })();

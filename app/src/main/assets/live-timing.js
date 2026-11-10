@@ -1042,20 +1042,49 @@
       });
     }
 
-    function nextSessionFromSchedule() {
+    async function nextSessionFromSchedule() {
       try {
         const raw = window.AndroidF1?.getSchedule();
-        if (!raw) return null;
-        const data = JSON.parse(raw);
-        if (!Array.isArray(data)) return null;
+        const data = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(data)) {
+          const now = Date.now();
+          const sessions = data
+            .filter((s) => s && s.is_cancelled !== true && s.is_cancelled !== "true"
+              && s.date_start && s.date_end)
+            .map((s) => ({
+              ...s,
+              startMs: Date.parse(s.date_start),
+              endMs: Date.parse(s.date_end),
+              source: "Jolpica"
+            }))
+            .filter((s) => Number.isFinite(s.startMs) && Number.isFinite(s.endMs))
+            .sort((a, b) => a.startMs - b.startMs);
+          const upcoming = sessions.find((s) => s.endMs > now);
+          if (upcoming) return upcoming;
+        }
+      } catch (error) {
+        console.info("The cached race calendar is unavailable; checking OpenF1.", error);
+      }
+
+      const year = new Date().getUTCFullYear();
+      for (const season of [year, year + 1]) {
+        const sessions = await getJson(`sessions?year=${season}`);
         const now = Date.now();
-        const sessions = data
-          .filter((s) => s && !s.is_cancelled && s.date_start && s.date_end)
-          .map((s) => ({ ...s, startMs: Date.parse(s.date_start), endMs: Date.parse(s.date_end) }))
-          .filter((s) => Number.isFinite(s.startMs) && Number.isFinite(s.endMs))
-          .sort((a, b) => a.startMs - b.startMs);
-        return sessions.find((s) => s.endMs > now) || null;
-      } catch { return null; }
+        const upcoming = sessions
+          .filter((session) => session.is_cancelled !== true && session.is_cancelled !== "true"
+            && session.date_start && session.date_end)
+          .map((session) => ({
+            ...session,
+            startMs: Date.parse(session.date_start),
+            endMs: Date.parse(session.date_end),
+            source: "OpenF1"
+          }))
+          .filter((session) => Number.isFinite(session.startMs)
+            && Number.isFinite(session.endMs) && session.endMs > now)
+          .sort((a, b) => a.startMs - b.startMs)[0];
+        if (upcoming) return upcoming;
+      }
+      return null;
     }
 
     function sessionKind(session) {
@@ -1108,67 +1137,68 @@
       ai.log.replaceChildren();
       ai.result.replaceChildren();
       ai.result.hidden = true;
-      const session = nextSessionFromSchedule();
-      if (!session) {
-        ai.status.textContent = "ПОМИЛКА";
-        ai.query.textContent = "Календар недоступний — спробуй пізніше.";
-        ai.busy = false;
+      try {
+        const session = await nextSessionFromSchedule();
+        if (!session) throw new Error("Календар не містить майбутніх сесій.");
+        const kind = sessionKind(session);
+        const when = new Date(session.startMs).toLocaleString("uk-UA", {
+          day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
+        });
+        ai.status.textContent = "АНАЛІЗУЮ…";
+        ai.query.textContent = `→ ${kindLabel(kind)}: ${session.location || session.country_name || "ГП"} · ${when}`;
+        await aiLog(`Читаю календар з ${session.source} API…`, 500);
+        await aiLog(`Визначено найближчу сесію: ${kindLabel(kind)}`, 700);
+        await aiLog(`Ключ сесії: ${session.session_key || "—"} · коло: ${session.meeting_key || "—"}`, 600);
+        await aiLog("Порівнюю офіційні та безкоштовні джерела…", 700);
+        await aiLog("Сортую за надійністю та ціною…", 600);
+        await aiLog("Формую рекомендації…", 500);
+        const picks = pickFor(kind);
+        ai.result.replaceChildren();
+        picks.forEach((pick, index) => {
+          const node = document.createElement(pick.url ? "a" : "div");
+          node.className = "watch-ai-pick";
+          node.dataset.price = pick.price;
+          if (pick.url) {
+            node.href = pick.url;
+            node.target = "_blank";
+            node.rel = "noreferrer noopener";
+          }
+          const rank = document.createElement("span");
+          rank.className = "watch-ai-rank";
+          rank.textContent = String(index + 1);
+          const main = document.createElement("div");
+          main.className = "watch-ai-main";
+          const strong = document.createElement("strong");
+          strong.textContent = pick.name;
+          const host = document.createElement("span");
+          host.className = "watch-ai-host";
+          try { host.textContent = pick.url ? new URL(pick.url).hostname.replace(/^www\./, "") : "без посилання"; }
+          catch { host.textContent = ""; }
+          const desc = document.createElement("span");
+          desc.textContent = `${pick.reason} ${pick.note || ""}`.trim();
+          main.append(strong, host, desc);
+          if (index === 0) {
+            const best = document.createElement("span");
+            best.className = "watch-ai-best";
+            best.textContent = "ТОП ВИБІР";
+            main.appendChild(best);
+          }
+          const badge = document.createElement("em");
+          badge.className = "watch-ai-badge";
+          badge.textContent = pick.price === "paid" ? "ПЛАТНО" : pick.price === "grey" ? "РИЗИК" : "БЕЗКОШТОВНО";
+          node.append(rank, main, badge);
+          ai.result.appendChild(node);
+        });
+        ai.result.hidden = false;
+        ai.status.textContent = `ГОТОВО · ${picks.length} ВАРІАНТИ`;
+      } catch (error) {
+        console.warn("Could not build the watch recommendations.", error);
+        ai.status.textContent = "API НЕДОСТУПНЕ";
+        ai.query.textContent = `Не вдалося отримати розклад: ${error.message}`;
+      } finally {
         ai.dot.dataset.busy = "false";
-        return;
+        ai.busy = false;
       }
-      const kind = sessionKind(session);
-      const when = new Date(session.startMs).toLocaleString("uk-UA", {
-        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit"
-      });
-      ai.status.textContent = "АНАЛІЗУЮ…";
-      ai.query.textContent = `→ ${kindLabel(kind)}: ${session.location || session.country_name || "ГП"} · ${when}`;
-      await aiLog("Читаю календар з офіційного Jolpica фіду…", 500);
-      await aiLog(`Визначено найближчу сесію: ${kindLabel(kind)}`, 700);
-      await aiLog(`Ключ сесії: ${session.session_key || "—"} · коло: ${session.meeting_key || "—"}`, 600);
-      await aiLog("Порівнюю офіційні та безкоштовні джерела…", 700);
-      await aiLog("Сортую за надійністю та ціною…", 600);
-      await aiLog("Формую рекомендації…", 500);
-      const picks = pickFor(kind);
-      ai.result.replaceChildren();
-      picks.forEach((pick, index) => {
-        const node = document.createElement(pick.url ? "a" : "div");
-        node.className = "watch-ai-pick";
-        node.dataset.price = pick.price;
-        if (pick.url) {
-          node.href = pick.url;
-          node.target = "_blank";
-          node.rel = "noreferrer noopener";
-        }
-        const rank = document.createElement("span");
-        rank.className = "watch-ai-rank";
-        rank.textContent = String(index + 1);
-        const main = document.createElement("div");
-        main.className = "watch-ai-main";
-        const strong = document.createElement("strong");
-        strong.textContent = pick.name;
-        const host = document.createElement("span");
-        host.className = "watch-ai-host";
-        try { host.textContent = pick.url ? new URL(pick.url).hostname.replace(/^www\./, "") : "без посилання"; }
-        catch { host.textContent = ""; }
-        const desc = document.createElement("span");
-        desc.textContent = `${pick.reason} ${pick.note || ""}`.trim();
-        main.append(strong, host, desc);
-        if (index === 0) {
-          const best = document.createElement("span");
-          best.className = "watch-ai-best";
-          best.textContent = "ТОП ВИБІР";
-          main.appendChild(best);
-        }
-        const badge = document.createElement("em");
-        badge.className = "watch-ai-badge";
-        badge.textContent = pick.price === "paid" ? "ПЛАТНО" : pick.price === "grey" ? "РИЗИК" : "БЕЗКОШТОВНО";
-        node.append(rank, main, badge);
-        ai.result.appendChild(node);
-      });
-      ai.result.hidden = false;
-      ai.status.textContent = `ГОТОВО · ${picks.length} ВАРІАНТИ`;  
-      ai.dot.dataset.busy = "false";
-      ai.busy = false;
     }
 
     const aiRefresh = $("watchAiRefresh");
