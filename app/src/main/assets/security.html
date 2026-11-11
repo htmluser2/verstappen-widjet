@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="uk">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050913">
+  <title>Verstappen Race Dash — Security</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f7fc;
+      --muted: #8a9db7;
+      --dim: #536882;
+      --blue: #47a5ff;
+      --red: #fb4054;
+      --gold: #f2c94c;
+      --green: #42d99a;
+      --panel: rgba(11, 19, 33, .92);
+      --line: rgba(115, 160, 207, .17);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: #050913;
+    }
+
+    body {
+      position: relative;
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 86% 16%, rgba(12, 72, 131, .27), transparent 33rem),
+        radial-gradient(ellipse at 0% 61%, rgba(128, 24, 45, .16), transparent 31rem),
+        repeating-linear-gradient(130deg, transparent 0 6px, rgba(255, 255, 255, .012) 7px, transparent 8px 13px),
+        linear-gradient(147deg, #09101c 0%, #050913 47%, #080d18 100%);
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 480px);
+      margin: 0 auto;
+      padding: max(28px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+    }
+
+    .masthead {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 1px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .team-mark {
+      display: grid;
+      width: 32px;
+      height: 30px;
+      place-items: center;
+      color: #06101c;
+      font-size: 15px;
+      font-weight: 1000;
+      font-style: italic;
+      transform: skew(-12deg);
+      background: linear-gradient(145deg, #f8d55d 0 22%, #fb4054 23% 69%, #176fb7 70%);
+      clip-path: polygon(12% 0, 100% 0, 83% 100%, 0 100%);
+      filter: drop-shadow(0 0 10px rgba(251, 64, 84, .34));
+    }
+
+    .team-name {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .16em;
+    }
+
+    .team-sub {
+      margin-top: 3px;
+      color: var(--dim);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .2em;
+    }
+
+    .shield-badge {
+      margin-left: auto;
+      padding: 6px 10px;
+      border: 1px solid rgba(66, 217, 154, .35);
+      border-radius: 999px;
+      color: var(--green);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      background: rgba(11, 33, 27, .6);
+    }
+
+    .card {
+      margin-top: 18px;
+      padding: 18px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      color: var(--gold);
+    }
+
+    .card p.hint {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      color: var(--dim);
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: .16em;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 13px;
+      border: 1px solid rgba(115, 160, 207, .25);
+      border-radius: 10px;
+      color: var(--ink);
+      font-size: 14px;
+      background: rgba(5, 10, 19, .72);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(71, 165, 255, .55);
+    }
+
+    input.error {
+      border-color: rgba(251, 64, 84, .6);
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      color: #06101c;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      cursor: pointer;
+      background: linear-gradient(145deg, #f8d55d 0 22%, #fb4054 23% 69%, #176fb7 70%);
+      box-shadow: 0 6px 20px rgba(251, 64, 84, .22);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn.ghost {
+      margin-top: 10px;
+      color: var(--muted);
+      background: rgba(11, 19, 33, .8);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      color: #ffe9ec;
+      background: linear-gradient(145deg, #fb4054 0 40%, #7c1420 100%);
+    }
+
+    .btn.safe {
+      color: #06101c;
+      background: linear-gradient(145deg, #42d99a 0 60%, #1c8a63 100%);
+    }
+
+    .msg {
+      margin-top: 12px;
+      padding: 10px 12px;
+      display: none;
+      border-radius: 10px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .msg.show {
+      display: block;
+    }
+
+    .msg.err {
+      border: 1px solid rgba(251, 64, 84, .35);
+      background: rgba(251, 64, 84, .08);
+      color: #ffb3bd;
+    }
+
+    .msg.ok {
+      border: 1px solid rgba(66, 217, 154, .35);
+      background: rgba(66, 217, 154, .08);
+      color: #a7f0d2;
+    }
+
+    .msg.warn {
+      border: 1px solid rgba(242, 201, 76, .4);
+      background: rgba(242, 201, 76, .08);
+      color: var(--gold);
+    }
+
+    .code-input {
+      letter-spacing: .5em;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .foot {
+      margin-top: 16px;
+      text-align: center;
+      color: var(--dim);
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: .18em;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+    <div class="masthead">
+      <div class="team-mark">V</div>
+      <div>
+        <div class="team-name">VERSTAPPEN RACE DASH</div>
+        <div class="team-sub">SECURITY CORE</div>
+      </div>
+      <div class="shield-badge">🛡 ЗАХИЩЕНО</div>
+    </div>
+
+    <!-- ============================ РЕЄСТРАЦІЯ ============================ -->
+    <section id="registerCard" class="card">
+      <h2>СТВОРЕННЯ АКАУНТА</h2>
+      <p class="hint">Перший запуск. Без реєстрації застосунок не відкриється.
+        На вказану Gmail-адресу буде надіслано код підтвердження.</p>
+
+      <label>НІКНЕЙМ</label>
+      <input id="regNick" autocomplete="off" placeholder="max_fan_33">
+
+      <label>GMAIL (ОБОВ'ЯЗКОВО)</label>
+      <input id="regEmail" type="email" autocomplete="off" placeholder="name@gmail.com">
+
+      <label>ПАРОЛЬ (МІН. 8, ЛІТЕРИ + ЦИФРИ)</label>
+      <input id="regPass" type="password" placeholder="••••••••">
+
+      <div class="check">
+        <input type="checkbox" id="reg2fa" style="width:auto">
+        <span for="reg2fa">Увімкнути двофакторну автентифікацію (2FA)</span>
+      </div>
+
+      <div id="regCodeBlock" class="hidden">
+        <label>6-ЗНАЧНИЙ КОД З GMAIL</label>
+        <input id="regCode" class="code-input" maxlength="6" placeholder="———">
+      </div>
+
+      <button id="regBtn" class="btn">ЗАРЕЄСТРУВАТИСЯ</button>
+      <button id="regConfirmBtn" class="btn hidden">ПІДТВЕРДИТИ КОД</button>
+
+      <div id="regMsg" class="msg"></div>
+    </section>
+
+    <!-- ============================ ВХІД ============================ -->
+    <section id="loginCard" class="card hidden">
+      <h2>ВХІД</h2>
+      <p class="hint">Увійдіть, щоб продовжити. Сесія захищена системою безпеки.</p>
+
+      <label>НІКНЕЙМ</label>
+      <input id="logNick" autocomplete="off">
+
+      <label>ПАРОЛЬ</label>
+      <input id="logPass" type="password">
+
+      <div id="log2faBlock" class="hidden">
+        <label>2FA-КОД З GMAIL</label>
+        <input id="logCode" class="code-input" maxlength="6" placeholder="———">
+        <button id="log2faBtn" class="btn">ПІДТВЕРДИТИ 2FA</button>
+      </div>
+
+      <button id="logBtn" class="btn">УВІЙТИ</button>
+
+      <div id="logMsg" class="msg"></div>
+    </section>
+
+    <!-- ==================== ДІАЛОГ "ЦЕ НЕ Я / ЦЕ Я" ==================== -->
+    <section id="tamperCard" class="card hidden">
+      <h2 style="color: var(--red)">⚠ ВИЯВЛЕНО ЗМІНИ ФАЙЛІВ</h2>
+      <p class="hint" id="tamperSummary">—</p>
+      <p class="hint">Це зробили ви?</p>
+
+      <button id="revertBtn" class="btn danger">🚫 ЦЕ НЕ Я — СКАСУВАТИ ЗМІНИ</button>
+
+      <div id="authBlock" class="hidden">
+        <label>ВАШ ПАРОЛЬ ДЛЯ ПІДТВЕРДЖЕННЯ</label>
+        <input id="authPass" type="password">
+        <button id="authBtn" class="btn safe">✅ ЦЕ Я — ПІДТВЕРДИТИ ПАРОЛЕМ</button>
+      </div>
+      <button id="showAuthBtn" class="btn ghost">✅ ЦЕ Я — ВВЕСТИ ПАРОЛЬ</button>
+
+      <div id="tamperMsg" class="msg"></div>
+    </section>
+
+    <div class="foot">MAX VERSTAPPEN · RACE DASH · SECURITY</div>
+  </div>
+
+  <script>
+    const Bridge = window.AndroidSecurity || {};
+
+    function show(id, on = true) { document.getElementById(id).classList.toggle('hidden', !on); }
+    function msg(id, text, kind) {
+      const box = document.getElementById(id);
+      box.textContent = text;
+      box.className = 'msg show ' + kind;
+    }
+
+    // ------------------------------ потік ------------------------------
+    function init() {
+      const state = JSON.parse(Bridge.getState ? Bridge.getState() : '{}');
+      if (state.tamper) {
+        show('registerCard', false);
+        show('loginCard', false);
+        show('tamperCard', true);
+        document.getElementById('tamperSummary').textContent = state.summary || '';
+      } else if (state.registered) {
+        show('registerCard', false);
+        show('loginCard', true);
+      } else {
+        show('registerCard', true);
+        show('loginCard', false);
+      }
+    }
+
+    // ------------------------------ реєстрація ------------------------------
+    document.getElementById('regBtn').onclick = () => {
+      const r = Bridge.beginRegistration(
+        document.getElementById('regNick').value.trim(),
+        document.getElementById('regEmail').value.trim(),
+        document.getElementById('regPass').value,
+        document.getElementById('reg2fa').checked
+      );
+      if (r === 'OK') {
+        const fallback = Bridge.lastFallbackCode ? Bridge.lastFallbackCode() : null;
+        msg('regMsg', fallback
+          ? 'Сервер підтвердження зараз недоступний. Ваш код прямо тут: ' + fallback
+          : 'Код надіслано на вашу Gmail-скриньку. Перевірте пошту та введіть код нижче.',
+          fallback ? 'warn' : 'ok');
+        show('regCodeBlock', true);
+        show('regConfirmBtn', true);
+        show('regBtn', false);
+      } else {
+        msg('regMsg', r, 'err');
+      }
+    };
+
+    document.getElementById('regConfirmBtn').onclick = () => {
+      if (Bridge.confirmRegistration(document.getElementById('regCode').value.trim())) {
+        msg('regMsg', 'Акаунт створено ✔ Відкриваю застосунок…', 'ok');
+        setTimeout(() => Bridge.proceed(), 700);
+      } else {
+        msg('regMsg', 'Невірний або прострочений код. Спробуйте ще раз.', 'err');
+      }
+    };
+
+    // ------------------------------ вхід ------------------------------
+    document.getElementById('logBtn').onclick = () => {
+      const r = Bridge.login(
+        document.getElementById('logNick').value.trim(),
+        document.getElementById('logPass').value
+      );
+      switch (r) {
+        case 'OK':
+          msg('logMsg', 'Вхід виконано ✔', 'ok');
+          setTimeout(() => Bridge.proceed(), 500);
+          break;
+        case '2FA': {
+          const fallback = Bridge.lastFallbackCode ? Bridge.lastFallbackCode() : null;
+          msg('logMsg', fallback
+            ? 'Сервер підтвердження зараз недоступний. Ваш 2FA-код прямо тут: ' + fallback
+            : 'На вашу Gmail-адресу надіслано 2FA-код.',
+            fallback ? 'warn' : 'ok');
+          show('log2faBlock', true);
+          show('logBtn', false);
+          break;
+        }
+        case 'NO_USER': msg('logMsg', 'Користувача не знайдено.', 'err'); break;
+        case 'BAD_PASS': msg('logMsg', 'Невірний пароль.', 'err'); break;
+        default: msg('logMsg', 'Помилка входу.', 'err');
+      }
+    };
+
+    document.getElementById('log2faBtn').onclick = () => {
+      if (Bridge.confirmLogin2fa(document.getElementById('logCode').value.trim())) {
+        msg('logMsg', 'Вхід підтверджено ✔', 'ok');
+        setTimeout(() => Bridge.proceed(), 500);
+      } else {
+        msg('logMsg', 'Невірний 2FA-код.', 'err');
+      }
+    };
+
+    // ------------------------------ тампер ------------------------------
+    document.getElementById('revertBtn').onclick = () => {
+      Bridge.revertChanges();
+      msg('tamperMsg', 'Зміни скасовано. Файли відновлено до еталонної версії.', 'ok');
+      setTimeout(() => Bridge.proceed(), 800);
+    };
+
+    document.getElementById('showAuthBtn').onclick = () => {
+      show('authBlock', true);
+      show('showAuthBtn', false);
+    };
+
+    document.getElementById('authBtn').onclick = () => {
+      if (Bridge.authorizeModification(document.getElementById('authPass').value)) {
+        msg('tamperMsg', 'Зміни прийнято як власні.', 'ok');
+        setTimeout(() => Bridge.proceed(), 700);
+      } else {
+        msg('tamperMsg', 'Невірний пароль. Зміни НЕ прийнято.', 'err');
+      }
+    };
+
+    init();
+  </script>
+</body>
+
+</html>

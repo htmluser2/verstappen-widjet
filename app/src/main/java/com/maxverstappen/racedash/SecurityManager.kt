@@ -2,6 +2,7 @@ package com.maxverstappen.racedash
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -258,8 +259,25 @@ object SecurityManager {
                 put("expiresAt", now() + 5 * 60 * 1000)
             }.toString())
             .apply()
-        EmailSender.send(context, email, buildTitle(purpose), buildBody(code, purpose))
+        EmailSender.send(context, email, buildTitle(purpose), buildBody(code, purpose)) { delivered ->
+            if (delivered) {
+                Log.i(TAG_EMAIL, "Код надіслано на $email (purpose=$purpose)")
+            } else {
+                // Сервер недоступний / не налаштований — показуємо код користувачу напряму.
+                Log.w(TAG_EMAIL, "Автовідправка не вдалася; код: $code")
+                prefs(context).edit()
+                    .putString(KEY_LAST_FALLBACK_CODE, code)
+                    .apply()
+            }
+        }
     }
+
+    private const val TAG_EMAIL = "SecurityManager"
+    private const val KEY_LAST_FALLBACK_CODE = "last_fallback_code"
+
+    /** Останній код, який не вдалося відправити поштою (для показу в UI). */
+    fun lastFallbackCode(context: Context): String? =
+        prefs(context).getString(KEY_LAST_FALLBACK_CODE, null)
 
     private fun buildTitle(purpose: String) = when (purpose) {
         "registration" -> "Verstappen Race Dash — код реєстрації"
