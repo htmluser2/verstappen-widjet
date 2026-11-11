@@ -41,14 +41,34 @@ set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"
 @rem Find java.exe
 if defined JAVA_HOME goto findJavaFromJavaHome
 
+@rem Prefer a Java 17+ runtime for Android Gradle Plugin 8.x; older Java 8 installs
+@rem can otherwise break dependency resolution even when the project itself is valid.
+set "JAVA_HOME="
+for %%D in (
+  "C:\Program Files\Eclipse Adoptium"
+  "C:\Program Files\Microsoft"
+  "C:\Program Files\Java"
+  "%USERPROFILE%\AppData\Local\Programs\Eclipse Adoptium"
+  "%USERPROFILE%\AppData\Local\Programs\Microsoft"
+) do (
+  if exist "%%~D" (
+    for /d %%J in ("%%~D\*") do (
+      if exist "%%~J\bin\java.exe" (
+        set "JAVA_HOME=%%~J"
+        goto findJavaFromJavaHome
+      )
+    )
+  )
+)
+
 set JAVA_EXE=java.exe
 %JAVA_EXE% -version >NUL 2>&1
 if %ERRORLEVEL% equ 0 goto execute
 
 echo. 1>&2
-echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH. 1>&2
+echo ERROR: JAVA_HOME is not set and no compatible Java 17+ installation could be found in typical locations. 1>&2
 echo. 1>&2
-echo Please set the JAVA_HOME variable in your environment to match the 1>&2
+echo Please install JDK 17 or newer and set the JAVA_HOME variable to match the 1>&2
 echo location of your Java installation. 1>&2
 
 goto fail
@@ -57,13 +77,63 @@ goto fail
 set JAVA_HOME=%JAVA_HOME:"=%
 set JAVA_EXE=%JAVA_HOME%/bin/java.exe
 
-if exist "%JAVA_EXE%" goto execute
+if exist "%JAVA_EXE%" goto validateJavaVersion
 
 echo. 1>&2
 echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME% 1>&2
 echo. 1>&2
 echo Please set the JAVA_HOME variable in your environment to match the 1>&2
 echo location of your Java installation. 1>&2
+
+goto fail
+
+:validateJavaVersion
+set "JAVA_VERSION="
+for /f "tokens=3" %%V in ('"%JAVA_EXE%" -version 2^>^&1') do (
+  set "JAVA_VERSION=%%~V"
+  set "JAVA_VERSION=%JAVA_VERSION:"=%"
+  for /f "tokens=1,2 delims=." %%A in ("%JAVA_VERSION%") do (
+    if "%%A"=="1" (
+      set "JAVA_MAJOR=%%B"
+    ) else (
+      set "JAVA_MAJOR=%%A"
+    )
+  )
+)
+
+if defined JAVA_MAJOR if "%JAVA_MAJOR%" GEQ "17" goto execute
+
+set "JAVA_HOME="
+set "JAVA_EXE=java.exe"
+goto resolveFallbackJava
+
+:resolveFallbackJava
+set "JAVA_HOME="
+for %%D in (
+  "C:\Program Files\Eclipse Adoptium"
+  "C:\Program Files\Microsoft"
+  "C:\Program Files\Java"
+  "%USERPROFILE%\AppData\Local\Programs\Eclipse Adoptium"
+  "%USERPROFILE%\AppData\Local\Programs\Microsoft"
+) do (
+  if exist "%%~D" (
+    for /d %%J in ("%%~D\*") do (
+      if exist "%%~J\bin\java.exe" (
+        set "JAVA_HOME=%%~J"
+        goto findJavaFromJavaHome
+      )
+    )
+  )
+)
+
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if %ERRORLEVEL% equ 0 goto execute
+
+echo. 1>&2
+echo ERROR: JAVA_HOME points to an older Java runtime and no compatible JDK 17+ could be found. 1>&2
+echo. 1>&2
+echo Please install JDK 17 or newer and set JAVA_HOME to the correct installation. 1>&2
 
 goto fail
 

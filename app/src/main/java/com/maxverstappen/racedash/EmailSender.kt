@@ -32,9 +32,9 @@ object EmailSender {
 
     private const val TAG = "EmailSender"
 
-    // ↓↓ ЗАПОВНІТЬ ЦІ ДВА ЗНАЧЕННЯ ПІСЛЯ СТВОРЕННЯ SUPABASE-ПРОЄКТУ ↓↓
-    private const val SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
-    private const val SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY"
+    // Supabase-проєкт (publishable key — публічний, безпечно для клієнта).
+    private const val SUPABASE_URL = "https://hjaivwiuehtrmwwydbcu.supabase.co"
+    private const val SUPABASE_ANON_KEY = "sb_publishable_U4xZ5SBAQGoLkvESNXAUEQ_t8bp734u"
 
     private val http = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
